@@ -50,18 +50,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btn_select_files" />
 
-    <ImageButton
-        android:id="@+id/selecionar_modo"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="28dp"
-        android:layout_marginEnd="7dp"
-        android:background="@drawable/arquivo"
-        android:contentDescription="Seleciona o modo de operação do seletor de arquivos"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.988"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_encoder" />
 
     <ImageButton
         android:id="@+id/btn_center"
@@ -107,8 +95,40 @@
             android:textSize="12sp" />
     </FrameLayout>
 
+    <FrameLayout
+        android:id="@+id/frame_chave"
+        android:layout_width="333dp"
+        android:layout_height="135dp"
+        android:layout_marginBottom="250dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/btn_select_files">
+
+        <ImageView
+            android:id="@+id/tela_chave"
+            android:layout_width="333dp"
+            android:layout_height="135dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/senha_descriptografar" />
+
+        <EditText
+            android:id="@+id/edit_chave"
+            android:layout_width="286dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="35dp"
+            android:background="@android:color/transparent"
+            android:cursorVisible="true"
+            android:hint="Digite algo aqui"
+            android:inputType="text"
+            android:textColor="@color/cinza"
+            android:textSize="12sp" />
+    </FrameLayout>
+
     <ImageButton
-        android:id="@+id/btn_ok"
+        android:id="@+id/btn_ok_senha"
         android:layout_width="333dp"
         android:layout_height="48dp"
         android:layout_marginTop="4dp"
@@ -118,6 +138,33 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/frame_senha"/>
+
+    <ImageButton
+        android:id="@+id/btn_ok_chave"
+        android:layout_width="333dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="4dp"
+        android:background="@drawable/ok"
+        android:contentDescription="Selecione os arquivos"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/frame_senha"/>
+
+    <ImageButton
+        android:id="@+id/btn_select_files"
+        android:layout_width="333dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="28dp"
+        android:background="@drawable/arquivos"
+        android:contentDescription="Selecione os arquivos"
+        app:layout_constraintBottom_toTopOf="@+id/frame_senha"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_encoder"
+        app:layout_constraintVertical_bias="0.0" />
 
     <FrameLayout
         android:id="@+id/frame_selecionar_funcao"
@@ -199,20 +246,7 @@
             android:background="@color/background_cinza_claro"/>
     </FrameLayout>
 
-    <ImageButton
-        android:id="@+id/btn_select_files"
-        android:layout_width="333dp"
-        android:layout_height="48dp"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="28dp"
-        android:background="@drawable/arquivos"
-        android:contentDescription="Selecione os arquivos"
-        app:layout_constraintBottom_toTopOf="@+id/frame_senha"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_encoder"
-        app:layout_constraintVertical_bias="0.0" />
+
 
     <ImageButton
         android:id="@+id/btn_menu"

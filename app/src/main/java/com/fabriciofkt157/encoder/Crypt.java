@@ -3,6 +3,7 @@ package com.fabriciofkt157.encoder;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -65,6 +66,54 @@ public class Crypt {
             Log.e("AESCrypt", "Erro na criptografia: " + e.getMessage());
         }
     }
+
+    public static void descriptografarArquivo(Context context, Uri uriEntrada, Uri uriSaida, byte[] chaveAES) {
+        try (
+                InputStream fis = context.getContentResolver().openInputStream(uriEntrada);
+                OutputStream fos = context.getContentResolver().openOutputStream(uriSaida)
+        ) {
+            if (fis == null || fos == null) {
+                Log.e("AESCrypt", "Erro ao abrir arquivos de entrada ou saída.");
+                return;
+            }
+
+            // Ler o IV (16 bytes) do início do arquivo
+            byte[] iv = new byte[16];
+            if (fis.read(iv) != 16) {
+                Log.e("AESCrypt", "Erro ao ler o IV.");
+                return;
+            }
+            IvParameterSpec ivSpec = new IvParameterSpec(iv);
+
+            // Criar chave AES
+            SecretKey secretKey = new SecretKeySpec(chaveAES, "AES");
+
+            // Inicializar o Cipher no modo DECRYPT_MODE
+            Cipher cipher = Cipher.getInstance(AES_TRANSFORMATION);
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, ivSpec);
+
+            // Criar buffer para leitura e descriptografia
+            byte[] buffer = new byte[8196];
+            int bytesRead;
+            while ((bytesRead = fis.read(buffer)) != -1) {
+                byte[] dadosDescriptografados = cipher.update(buffer, 0, bytesRead);
+                if (dadosDescriptografados != null) {
+                    fos.write(dadosDescriptografados);
+                }
+            }
+
+            // Finalizar a descriptografia
+            byte[] finalBytes = cipher.doFinal();
+            if (finalBytes != null) {
+                fos.write(finalBytes);
+            }
+            Log.d("AESCrypt", "Arquivo descriptografado com sucesso!");
+        } catch (Exception e) {
+            Log.e("AESCrypt", "Erro na descriptografia: " + e.getMessage());
+            Toast.makeText(context, "Erro ao descriptografar o arquivo" + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
     public static byte[] gerarChaveAES(String key, int keySize) throws NoSuchAlgorithmException {
         if(key != null){
             MessageDigest digest = MessageDigest.getInstance("SHA-256");

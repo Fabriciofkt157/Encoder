@@ -137,6 +137,15 @@ public class BaseActivity extends AppCompatActivity {
                 Ferramentas.limparBg(null, btnsMenu, R.color.background_cinza_claro);
                 btnsMenu[index].setBackgroundResource(R.color.cinza_azulado_claro);
                 op_modo = index;
+                if(index == 0){
+                    Intent intent = new Intent(this, Criptografar.class);
+                    startActivity(intent);
+                    finish();
+                } else if(index == 1){
+                    Intent intent = new Intent(this, Descriptografar.class);
+                    startActivity(intent);
+                    finish();
+                }
             });
         }
     }
@@ -214,6 +223,17 @@ public class BaseActivity extends AppCompatActivity {
         selecionarArquivosLauncher.launch(intent);
     }
 
+    private OnArquivoSelecionadoListener callbackSelecionarUriArquivoUnico;
+
+    public void selecionarArquivoUnico(OnArquivoSelecionadoListener callback) {
+        this.callbackSelecionarUriArquivoUnico = callback;
+
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false);
+        selecionarArquivosLauncher.launch(intent);
+    }
+
     private final ActivityResultLauncher<Intent> selecionarArquivosLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
                 if (result.getResultCode() == RESULT_OK) {
@@ -236,6 +256,8 @@ public class BaseActivity extends AppCompatActivity {
                         // Retorna a lista com todos os arquivos selecionados
                         if (callbackSelecionarUriArquivos != null) {
                             callbackSelecionarUriArquivos.onArquivosSelecionados(listaUris);
+                        } else if(callbackSelecionarUriArquivoUnico != null){
+                            callbackSelecionarUriArquivoUnico.onArquivoSelecionado(listaUris.get(0));
                         }
                     }
                 }
@@ -258,6 +280,10 @@ public class BaseActivity extends AppCompatActivity {
     }
     public interface OnArquivosSelecionadosListener {
         void onArquivosSelecionados(List<Uri> uris);
+
+    }
+    public interface OnArquivoSelecionadoListener {
+        void onArquivoSelecionado(Uri uri);
 
     }
 

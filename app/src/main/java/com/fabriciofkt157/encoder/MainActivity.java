@@ -42,10 +42,9 @@ public class MainActivity extends AppCompatActivity {
         });
         btn_selecionar_descriptografar.setOnClickListener(v -> {
             botaoPressionado(btn_selecionar_descriptografar);
-            makeText(this, "Ainda trabalhando nisso...", Toast.LENGTH_SHORT).show();
-            /*Intent intent = new Intent(this, Descriptografar.class);
+            Intent intent = new Intent(this, Descriptografar.class);
             startActivity(intent);
-            finish();*/
+            finish();
         });
         btn_selecionar_base64.setOnClickListener(v -> {
             botaoPressionado(btn_selecionar_base64);

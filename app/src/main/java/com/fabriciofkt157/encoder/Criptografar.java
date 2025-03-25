@@ -2,6 +2,8 @@ package com.fabriciofkt157.encoder;
 
 import static android.widget.Toast.makeText;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
@@ -24,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +37,7 @@ public class Criptografar extends BaseActivity{
     FrameLayout senha;
     EditText edit_senha;
     TextView text_selecione_cripto, tv_nome_arquivo;
-    int nivelDeSeguranca = 0;
+    int nivelDeSeguranca = 0, estado = 0;
 
     byte[] chaveGerada;
     private boolean arquivos = false;
@@ -122,7 +125,6 @@ public class Criptografar extends BaseActivity{
                     urisPastasSelecionadas.add(uri);
                     atualizarEstadoArquivos(urisArquivosSelecionados, urisPastasSelecionadas, tv_nome_arquivo);
                     arquivos = true;
-
                 });
             }
         });
@@ -143,10 +145,13 @@ public class Criptografar extends BaseActivity{
             if(urisPastasSelecionadas.isEmpty() && urisArquivosSelecionados.isEmpty()) makeText(this, "Nenhum arquivo selecionado.", Toast.LENGTH_SHORT).show();
             else if(nivelDeSeguranca == 0) makeText(this, "Nenhum tipo de criptografia foi selecionado.", Toast.LENGTH_SHORT).show();
             else {
+                estado = 1;
                 botaoPressionado(btnCenter);
-                btnCenter.setVisibility(View.INVISIBLE);
                 senha.setVisibility(View.VISIBLE);
                 btn_ok.setVisibility(View.VISIBLE);
+
+                desativarBtns();
+
                 edit_senha.requestFocus();
                 InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.showSoftInput(edit_senha, InputMethodManager.SHOW_IMPLICIT);
@@ -157,19 +162,31 @@ public class Criptografar extends BaseActivity{
             botaoPressionado(btn_ok);
             senhaUsuario = edit_senha.getText().toString();
             if(!senhaUsuario.isEmpty()) {
-                btnCenter.setVisibility(View.VISIBLE);
                 senha.setVisibility(View.INVISIBLE);
                 btn_ok.setVisibility(View.INVISIBLE);
+
                 hideKeyboard(edit_senha);
                 edit_senha.setText("");
                 try {
                     chaveGerada = Crypt.gerarChaveAES(senhaUsuario, nivelDeSeguranca);
+                    ClipboardManager clipboard = (ClipboardManager) this.getSystemService(Context.CLIPBOARD_SERVICE);
+                    ClipData clip = ClipData.newPlainText("Chave AES gerada", Arrays.toString(chaveGerada));
+                    clipboard.setPrimaryClip(clip);
+                    new AlertDialog.Builder(this)
+                            .setTitle("Chave AES")
+                            .setMessage("A chave de criptografia foi copiada para a área de transferência.\n\n" +
+                                    "Guarde-a em um local seguro para evitar a perda de acesso aos seus dados.\n\n" +
+                                    "Ainda podemos tentar recuperá-la, mas não garantimos 100% de sucesso.")
+                            .setPositiveButton("Entendi", (dialog, which) -> dialog.dismiss())
+                            .show();
+
                     criptografia();
                 } catch (NoSuchAlgorithmException e) {
                     makeText(this, "Houve um problema ao processar sua senha... Vamos prosseguir com uma chave aleatória.", Toast.LENGTH_SHORT).show();
                     try {
                         chaveGerada = Crypt.gerarChaveAES(null, nivelDeSeguranca);
                         criptografia();
+
                     } catch (NoSuchAlgorithmException ex) {
                         makeText(this, "Um erro lendário foi encontrado: ", Toast.LENGTH_SHORT).show();
                         makeText(this, "Não conseguimos processar a chave ... ", Toast.LENGTH_SHORT).show();
@@ -181,6 +198,41 @@ public class Criptografar extends BaseActivity{
                 builder.show();
             }
         });
+    }
+
+    public void ativarBtns(){
+        btnCenter.setEnabled(true);
+        btnSelecionarArquivos.setEnabled(true);
+        btnAes128.setEnabled(true);
+        btnAes192.setEnabled(true);
+        btnAes256.setEnabled(true);
+        btnSelecionarModo.setEnabled(true);
+
+        btnCenter.setAlpha(1f);
+        btnSelecionarArquivos.setAlpha(1f);
+        btnAes256.setAlpha(1f);
+        btnAes192.setAlpha(1f);
+        btnAes128.setAlpha(1f);
+        btnSelecionarModo.setAlpha(1f);
+        tv_nome_arquivo.setAlpha(1f);
+        text_selecione_cripto.setAlpha(1f);
+    }
+    public void desativarBtns(){
+        btnCenter.setEnabled(false);
+        btnSelecionarArquivos.setEnabled(false);
+        btnAes128.setEnabled(false);
+        btnAes192.setEnabled(false);
+        btnAes256.setEnabled(false);
+        btnSelecionarModo.setEnabled(false);
+
+        btnCenter.setAlpha(0.25f);
+        btnSelecionarArquivos.setAlpha(0.25f);
+        btnAes256.setAlpha(0.25f);
+        btnAes192.setAlpha(0.25f);
+        btnAes128.setAlpha(0.25f);
+        btnSelecionarModo.setAlpha(0.25f);
+        tv_nome_arquivo.setAlpha(0.25f);
+        text_selecione_cripto.setAlpha(0.25f);
     }
 
 
@@ -257,9 +309,16 @@ public class Criptografar extends BaseActivity{
 
             FileUtils.deleteFileFromUri(Criptografar.this, arquivoTemp);
 
+            Map<Uri, byte[]> mapaDeChaves = FileUtils.carregarMap(this);
+            mapaDeChaves.put(uriArquivoAes, chaveGerada);
+            FileUtils.salvarMap(this, mapaDeChaves);
+
             makeText(Criptografar.this, "Os dados foram salvos em: " + uri + "/" + nomeArquivoAes, Toast.LENGTH_SHORT).show();
         });
+        ativarBtns();
+        estado = 0;
     }
+
     private AlertDialog.Builder getBuilder(FrameLayout senha, ImageButton btn_ok, EditText edit_senha) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Nenhum texto foi inserido.");
@@ -291,7 +350,7 @@ public class Criptografar extends BaseActivity{
         @Override
         public void run() {
             if ((!arquivos || nivelDeSeguranca == 0) && btn_menu_mode == 0) btnCenter.setAlpha(0.65f);
-            else if (btn_menu_mode == 1) btnCenter.setAlpha(0.25f);
+            else if (btn_menu_mode == 1 || estado == 1) btnCenter.setAlpha(0.25f);
             else if (btn_menu_mode == 0) btnCenter.setAlpha(1f);
 
             handler.postDelayed(this, 16);
