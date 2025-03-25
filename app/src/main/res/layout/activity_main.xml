@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background">
+
+    <TextView
+        android:id="@+id/tv_encoder"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/jersey10_regular"
+        android:text="Encoder"
+        android:textColor="@android:color/white"
+        android:textSize="64sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.044"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteY="0dp"
+        tools:ignore="MissingConstraints" />
+
+    <TextView
+        android:id="@+id/tv_info_menu"
+        android:layout_width="385dp"
+        android:layout_height="98dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="52dp"
+        android:fontFamily="@font/jersey10_regular"
+        android:text="selecione a operação que deseja realizar:"
+        android:textColor="@color/white"
+        android:textSize="32sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_encoder" />
+
+    <TextView
+        android:id="@+id/btn_selecionar_base64"
+        android:layout_width="244dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="48dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/botao_arredondado"
+        android:fontFamily="@font/jersey10_regular"
+        android:text=" base 64"
+        android:textColor="@color/cinza_background"
+        android:textSize="32sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_selecionar_descriptografar" />
+
+    <TextView
+        android:id="@+id/btn_selecionar_descriptografar"
+        android:layout_width="244dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="48dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/botao_arredondado"
+        android:fontFamily="@font/jersey10_regular"
+        android:text=" descriptografar"
+        android:textColor="@color/cinza_background"
+        android:textSize="32sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_selecionar_criptografar" />
+
+    <TextView
+        android:id="@+id/btn_selecionar_criptografar"
+        android:layout_width="244dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="48dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/botao_arredondado"
+        android:fontFamily="@font/jersey10_regular"
+        android:text=" criptografar"
+        android:textColor="@color/cinza_background"
+        android:textSize="32sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_info_menu" />
+
+    <TextView
+        android:id="@+id/btn_selecionar_comparador"
+        android:layout_width="244dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="48dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/botao_arredondado"
+        android:fontFamily="@font/jersey10_regular"
+        android:text=" comparar arquivos entre dispositivos"
+        android:textColor="@color/cinza_background"
+        android:textSize="32sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_selecionar_sha256" />
+
+    <TextView
+        android:id="@+id/btn_selecionar_sha256"
+        android:layout_width="244dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="48dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/botao_arredondado"
+        android:fontFamily="@font/jersey10_regular"
+        android:text=" SHA-256"
+        android:textColor="@color/cinza_background"
+        android:textSize="32sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_selecionar_base64" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="cor2">#FFBB86FC</color>
+    <color name="cor1">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="cor3">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="cinza_background">#4F5663</color>
+    <color name="cinza_background_claro">#5c677d</color>
+    <color name="cinza">#3A3A3A</color>
+    <color name="cinza_azulado_claro">#969faf</color>
+    <color name="background_cinza_claro">#bbc2ce</color>
+    <color name="azul">#007BFF</color>
+    <color name="verde_neon">#01c754</color>
+    <color name="roxo_escuro">#3a2746</color>
+</resources>

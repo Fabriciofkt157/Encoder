@@ -1,0 +1,311 @@
+package com.fabriciofkt157.encoder;
+
+import static android.widget.Toast.makeText;
+
+import android.content.Context;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.ImageButton;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.res.ResourcesCompat;
+import androidx.documentfile.provider.DocumentFile;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+public class Criptografar extends BaseActivity{
+    ImageButton btnAes128, btnAes192, btnAes256, btnCenter, btn_ok, btnSelecionarArquivos, btnSelecionarModo;
+    FrameLayout senha;
+    EditText edit_senha;
+    TextView text_selecione_cripto, tv_nome_arquivo;
+    int nivelDeSeguranca = 0;
+
+    byte[] chaveGerada;
+    private boolean arquivos = false;
+    private String senhaUsuario;
+
+    List<Uri> urisArquivosSelecionados = new ArrayList<>(), urisPastasSelecionadas = new ArrayList<>();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.criptografar);
+
+        tv_nome_arquivo = findViewById(R.id.nome_arquivo);
+        btnSelecionarArquivos = findViewById(R.id.btn_select_files);
+        btnSelecionarModo = findViewById(R.id.selecionar_modo);
+
+        btnCenter = findViewById(R.id.btn_center);
+        btn_ok = findViewById(R.id.btn_ok);
+        edit_senha = findViewById(R.id.edit_senha);
+        senha = findViewById(R.id.frame_senha);
+
+        btnAes128 = findViewById(R.id.btn_aes_128);
+        btnAes192 = findViewById(R.id.btn_aes_192);
+        btnAes256 = findViewById(R.id.btn_aes_256);
+        text_selecione_cripto = findViewById(R.id.text_selecione_cripto);
+        android.graphics.Typeface typeface = ResourcesCompat.getFont(this, R.font.jersey10_regular);
+        text_selecione_cripto.setTypeface(typeface);
+
+        setupMenu();
+        renderMenu(
+                new ImageButton[]{ btnSelecionarArquivos, btnSelecionarModo, btnCenter, btn_ok, btnAes128, btnAes192, btnAes256 },
+                new TextView[]{ encoder, encoderM, text_selecione_cripto, tv_nome_arquivo },
+                new FrameLayout[]{ senha },
+                new EditText[]{ edit_senha }
+        );
+
+        switch(nivelDeSeguranca){
+            case 128:
+                btnAes128.setAlpha(0.75f);
+                break;
+            case 192:
+                btnAes192.setAlpha(0.75f);
+                break;
+            case 256:
+                btnAes256.setAlpha(0.75f);
+                break;
+            default:
+                break;
+        }
+
+        btnAes128.setOnClickListener(v -> {
+            btnAes256.setAlpha(1f);
+            btnAes192.setAlpha(1f);
+            btnAes128.setAlpha(0.75f);
+            if(nivelDeSeguranca != 128) makeText(this, "Chave para 128 bits selecionada.", Toast.LENGTH_SHORT).show(); nivelDeSeguranca = 128;
+        });
+
+        btnAes192.setOnClickListener(v -> {
+            btnAes256.setAlpha(1f);
+            btnAes192.setAlpha(0.75f);
+            btnAes128.setAlpha(1f);
+            if(nivelDeSeguranca != 192) makeText(this, "Chave para 192 bits selecionada.", Toast.LENGTH_SHORT).show(); nivelDeSeguranca = 192;
+        });
+
+        btnAes256.setOnClickListener(v -> {
+            btnAes256.setAlpha(0.75f);
+            btnAes192.setAlpha(1f);
+            btnAes128.setAlpha(1f);
+            if(nivelDeSeguranca != 256) makeText(this, "Chave para 256 bits selecionada.", Toast.LENGTH_SHORT).show(); nivelDeSeguranca = 256;
+        });
+
+        btnSelecionarArquivos.setOnClickListener(v -> {
+            botaoPressionado(btnSelecionarArquivos);
+
+            if(modo == 0) {
+                selecionarArquivos(uris -> {
+                    urisArquivosSelecionados.addAll(uris);
+                    atualizarEstadoArquivos(urisArquivosSelecionados, urisPastasSelecionadas, tv_nome_arquivo);
+                    arquivos = true;
+                });
+            }
+            else {
+                makeText(this, "Selecione a pasta que deseja criptografar", Toast.LENGTH_SHORT).show();
+                selecionarPasta(uri -> {
+                    urisPastasSelecionadas.add(uri);
+                    atualizarEstadoArquivos(urisArquivosSelecionados, urisPastasSelecionadas, tv_nome_arquivo);
+                    arquivos = true;
+
+                });
+            }
+        });
+        btnSelecionarModo.setOnClickListener(v -> {
+            botaoPressionado(btnSelecionarModo);
+            if (modo == 1) {
+                btnSelecionarModo.setBackgroundResource(R.drawable.arquivo);
+                modo = 0;
+            } else {
+                btnSelecionarModo.setBackgroundResource(R.drawable.pasta);
+                modo = 1;
+            }
+        });
+
+        if(!arquivos || nivelDeSeguranca == 0) btnCenter.setAlpha(0.7f);
+        else btnCenter.setAlpha(1f);
+        btnCenter.setOnClickListener(v -> {
+            if(urisPastasSelecionadas.isEmpty() && urisArquivosSelecionados.isEmpty()) makeText(this, "Nenhum arquivo selecionado.", Toast.LENGTH_SHORT).show();
+            else if(nivelDeSeguranca == 0) makeText(this, "Nenhum tipo de criptografia foi selecionado.", Toast.LENGTH_SHORT).show();
+            else {
+                botaoPressionado(btnCenter);
+                btnCenter.setVisibility(View.INVISIBLE);
+                senha.setVisibility(View.VISIBLE);
+                btn_ok.setVisibility(View.VISIBLE);
+                edit_senha.requestFocus();
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.showSoftInput(edit_senha, InputMethodManager.SHOW_IMPLICIT);
+            }
+        });
+        edit_senha.setOnFocusChangeListener((v, hasFocus) -> edit_senha.setCursorVisible(hasFocus));
+        btn_ok.setOnClickListener(v -> {
+            botaoPressionado(btn_ok);
+            senhaUsuario = edit_senha.getText().toString();
+            if(!senhaUsuario.isEmpty()) {
+                btnCenter.setVisibility(View.VISIBLE);
+                senha.setVisibility(View.INVISIBLE);
+                btn_ok.setVisibility(View.INVISIBLE);
+                hideKeyboard(edit_senha);
+                edit_senha.setText("");
+                try {
+                    chaveGerada = Crypt.gerarChaveAES(senhaUsuario, nivelDeSeguranca);
+                    criptografia();
+                } catch (NoSuchAlgorithmException e) {
+                    makeText(this, "Houve um problema ao processar sua senha... Vamos prosseguir com uma chave aleatória.", Toast.LENGTH_SHORT).show();
+                    try {
+                        chaveGerada = Crypt.gerarChaveAES(null, nivelDeSeguranca);
+                        criptografia();
+                    } catch (NoSuchAlgorithmException ex) {
+                        makeText(this, "Um erro lendário foi encontrado: ", Toast.LENGTH_SHORT).show();
+                        makeText(this, "Não conseguimos processar a chave ... ", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            } else {
+                hideKeyboard(edit_senha);
+                AlertDialog.Builder builder = getBuilder(senha, btn_ok, edit_senha);
+                builder.show();
+            }
+        });
+    }
+
+
+    public Map<String, byte[]> capturarEstruturaPasta(Uri pastaUri) {
+        Map<String, byte[]> arquivosMap = new HashMap<>();
+        DocumentFile pasta = DocumentFile.fromTreeUri(this, pastaUri);
+
+        if (pasta != null && pasta.isDirectory()) {
+            capturarArquivosRecursivamente(pasta, "", arquivosMap);
+        }
+        return arquivosMap;
+    }
+
+    private void capturarArquivosRecursivamente(DocumentFile pasta, String caminhoAtual, Map<String, byte[]> arquivosMap) {
+        for (DocumentFile file : pasta.listFiles()) {
+            String caminho = caminhoAtual + "/" + file.getName();
+
+            if (file.isDirectory()) {
+                Log.d("Pasta", "📁 " + caminho);
+                capturarArquivosRecursivamente(file, caminho, arquivosMap);
+            } else {
+                Log.d("Arquivo", "📄 " + caminho);
+                arquivosMap.put(caminho, lerArquivoParaBytes(file.getUri()));
+            }
+        }
+    }
+
+    private byte[] lerArquivoParaBytes(Uri fileUri) {
+        try (InputStream inputStream = getContentResolver().openInputStream(fileUri);
+             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+
+            while ((bytesRead = Objects.requireNonNull(inputStream).read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+            return outputStream.toByteArray();
+        } catch (IOException e) {
+            Log.e("ErroLeitura", "Erro ao ler arquivo: " + fileUri, e);
+            return null;
+        }
+    }
+
+    public void criptografia(){
+        //ler dados
+        List<Map<String, byte[]>> listaDePastasArquivos = new ArrayList<>();
+        if(!urisPastasSelecionadas.isEmpty()){
+            for(Uri uri: urisPastasSelecionadas){
+                Map<String, byte[]> estruturaPasta = capturarEstruturaPasta(uri);
+                listaDePastasArquivos.add(estruturaPasta);
+            }
+        }
+        if(!urisArquivosSelecionados.isEmpty()){
+            Map<String, byte[]> arquivosIndividuais = new HashMap<>();
+            for(Uri uri : urisArquivosSelecionados){
+                String nome = "/" + nomeArquivoPorUri(uri);
+                byte[] dados = obterBytesDeUri(uri);
+                arquivosIndividuais.put(nome, dados);
+                listaDePastasArquivos.add(arquivosIndividuais);
+            }
+        }
+
+        //captar a pasta destino e criptografar
+
+        selecionarPasta(uri -> {
+            String nomeTemp = "temp" + System.currentTimeMillis();
+            Uri arquivoTemp = FileUtils.salvarArquivo(Criptografar.this, uri, nomeTemp, null);
+            FileUtils.salvarListaEmArquivo(Criptografar.this, arquivoTemp, listaDePastasArquivos);
+
+            String nomeArquivoAes = "arquivos_criptografados.aes";
+            Uri uriArquivoAes = FileUtils.salvarArquivo(Criptografar.this, uri, nomeArquivoAes, null);
+            Crypt.criptografarArquivo(Criptografar.this, arquivoTemp, uriArquivoAes, chaveGerada);
+
+            makeText(Criptografar.this, "Os dados foram salvos em: " + uri + "/" + nomeArquivoAes, Toast.LENGTH_SHORT).show();
+        });
+    }
+    private AlertDialog.Builder getBuilder(FrameLayout senha, ImageButton btn_ok, EditText edit_senha) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Nenhum texto foi inserido.");
+        builder.setMessage("Deseja continuar a partir de uma chave aleatória?");
+        builder.setPositiveButton("Sim", (dialog, which) -> {
+            try {
+                chaveGerada = Crypt.gerarChaveAES(null, nivelDeSeguranca);
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
+            }
+            makeText(this, "Prosseguindo com a criptografia.", Toast.LENGTH_SHORT).show();
+            senha.setVisibility(View.INVISIBLE);
+            btn_ok.setVisibility(View.INVISIBLE);
+            hideKeyboard(edit_senha);
+            criptografia();
+            makeText(this, "Arquivo criptografado com sucesso!", Toast.LENGTH_SHORT).show();
+        });
+        builder.setNegativeButton("Inserir senha", (dialog, which) -> {
+            dialog.dismiss();
+            edit_senha.requestFocus();
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.showSoftInput(edit_senha, InputMethodManager.SHOW_IMPLICIT);
+        });
+        return builder;
+    }
+
+    private final Handler handler = new Handler();
+    private final Runnable updateRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if ((!arquivos || nivelDeSeguranca == 0) && btn_menu_mode == 0) btnCenter.setAlpha(0.65f);
+            else if (btn_menu_mode == 1) btnCenter.setAlpha(0.25f);
+            else if (btn_menu_mode == 0) btnCenter.setAlpha(1f);
+
+            handler.postDelayed(this, 16);
+        }
+    };
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        handler.post(updateRunnable);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        handler.removeCallbacks(updateRunnable);
+    }
+
+}
