@@ -6,6 +6,8 @@ import android.provider.DocumentsContract;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.documentfile.provider.DocumentFile;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -21,7 +23,6 @@ import java.io.OutputStreamWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class FileUtils {
 
@@ -94,32 +95,51 @@ public class FileUtils {
             Log.e("SalvarArquivo", "Erro ao salvar no Uri", e);
         }
     }
+    public static void logarMap(Map<Uri, byte[]> uriMap) {
+        if (uriMap.isEmpty()) {
+            Log.d("UriStorage", "O mapa está vazio.");
+            return;
+        }
+
+        for (Map.Entry<Uri, byte[]> entry : uriMap.entrySet()) {
+            String uriString = entry.getKey().toString();
+            String chaveHex = bytesToHex(entry.getValue());
+
+            Log.d("UriStorage", "URI: " + uriString + " | Chave: " + chaveHex);
+        }
+    }
+
 
 
     public static void deleteFileFromUri(Context context, Uri fileUri) {
         try {
-            int deletedRows = context.getContentResolver().delete(fileUri, null, null);
-            if (deletedRows > 0) {
-                Log.d("DELETE_FILE", "Arquivo deletado com sucesso: " + fileUri);
+            DocumentFile documentFile = DocumentFile.fromSingleUri(context, fileUri);
+            if (documentFile != null && documentFile.exists()) {
+                if (documentFile.delete()) {
+                    Log.d("DELETE_FILE", "Arquivo deletado com sucesso: " + fileUri);
+                } else {
+                    Log.e("DELETE_FILE", "Falha ao deletar o arquivo: " + fileUri);
+                }
             } else {
-                Log.e("DELETE_FILE", "Não foi possível deletar o arquivo: " + fileUri);
+                Log.e("DELETE_FILE", "Arquivo não encontrado: " + fileUri);
             }
         } catch (Exception e) {
             Log.e("DELETE_FILE", "Erro ao deletar arquivo: " + fileUri, e);
         }
     }
 
+
     private static final String FILE_NAME = "uri_armazenado.txt";
 
     //salvar o mapa no arquivo
-    public static void salvarMap(Context context, Map<Uri, byte[]> uriMap) {
-        try (FileOutputStream fos = context.openFileOutput(FILE_NAME, Context.MODE_PRIVATE);
+    public static void salvarMap(Context context, Map<String, byte[]> mapaDeChavesSalvas) {
+        try (FileOutputStream fos = context.openFileOutput("uri_armazenado.txt", Context.MODE_PRIVATE);
              OutputStreamWriter writer = new OutputStreamWriter(fos)) {
 
             JSONArray jsonArray = new JSONArray();
-            for (Map.Entry<Uri, byte[]> entry : uriMap.entrySet()) {
+            for (Map.Entry<String, byte[]> entry : mapaDeChavesSalvas.entrySet()) {
                 JSONObject jsonObject = new JSONObject();
-                jsonObject.put("uri", entry.getKey().toString());
+                jsonObject.put("nome", entry.getKey());
                 jsonObject.put("chave", bytesToHex(entry.getValue()));
                 jsonArray.put(jsonObject);
             }
@@ -131,12 +151,19 @@ public class FileUtils {
         }
     }
 
-    //ler o mapa do arquivo
-    public static Map<Uri, byte[]> carregarMap(Context context) {
-        Map<Uri, byte[]> uriMap = new HashMap<>();
 
-        try (FileInputStream fis = context.openFileInput(FILE_NAME);
-             BufferedReader reader = new BufferedReader(new InputStreamReader(fis))) {
+    //ler o mapa do arquivo
+    public static Map<String, byte[]> carregarMap(Context context) {
+        File file = new File(context.getFilesDir(), "uri_armazenado.txt");
+
+        if (!file.exists()) {
+            Log.e("UriStorage", "Arquivo uri_armazenado.txt não encontrado, criando novo.");
+            return new HashMap<>();
+        }
+
+        try (FileInputStream fis = new FileInputStream(file);
+             InputStreamReader isr = new InputStreamReader(fis);
+             BufferedReader reader = new BufferedReader(isr)) {
 
             StringBuilder jsonString = new StringBuilder();
             String line;
@@ -145,18 +172,27 @@ public class FileUtils {
             }
 
             JSONArray jsonArray = new JSONArray(jsonString.toString());
+            Map<String, byte[]> uriMap = new HashMap<>();
+
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject jsonObject = jsonArray.getJSONObject(i);
-                Uri uri = Uri.parse(jsonObject.getString("uri"));
+                String nomeArquivo = String.valueOf(jsonObject.getString("nome"));
                 byte[] chave = hexToBytes(jsonObject.getString("chave"));
-                uriMap.put(uri, chave);
+                uriMap.put(nomeArquivo, chave);
             }
+
+            return uriMap;
+
         } catch (Exception e) {
             Log.e("UriStorage", "Erro ao carregar o Map", e);
+            Map<String, byte[]> mapGerado= new HashMap<>();
+            mapGerado.put("none", null);
+            salvarMap(context, mapGerado);
+            return mapGerado;
         }
-
-        return uriMap;
     }
+
+
 
     // Converter byte[] para String hexadecimal
     private static String bytesToHex(byte[] bytes) {

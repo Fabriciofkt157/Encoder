@@ -75,14 +75,15 @@ public class Descriptografar extends BaseActivity {
             else {
                 estado = 1;
                 boolean arquivoReconhecido = false;
-                Map<Uri, byte[]> dadosSalvos = FileUtils.carregarMap(this);
-                for(Map.Entry<Uri, byte[]> urisSalvos : dadosSalvos.entrySet()){
-                    Uri uriSalvo = urisSalvos.getKey();
-                    if(uriSalvo == arquivoSelecionado){
+                Map<String, byte[]> dadosSalvos = FileUtils.carregarMap(this);
+                //FileUtils.logarMap(dadosSalvos);
+                for(Map.Entry<String, byte[]> chavesSalvas : dadosSalvos.entrySet()){
+                    String nomeArquivoSalvo = chavesSalvas.getKey();
+                    if(nomeArquivoSalvo.equals(nomeArquivoCarregado)){
                         makeText(this, "Boas notícias! Encontramos a chave de criptografia no armazenamento do aplicativo", Toast.LENGTH_SHORT).show();
                         makeText(this, "Vamos descriptografar seu arquivo.", Toast.LENGTH_SHORT).show();
                         arquivoReconhecido = true;
-                        chaveAES = urisSalvos.getValue();
+                        chaveAES = chavesSalvas.getValue();
                         descriptografia();
                     }
                 }

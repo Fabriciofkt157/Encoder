@@ -217,7 +217,7 @@ public class BaseActivity extends AppCompatActivity {
     public void selecionarArquivos(OnArquivosSelecionadosListener callback) {
         this.callbackSelecionarUriArquivos = callback;
 
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.setType("*/*");
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
         selecionarArquivosLauncher.launch(intent);
@@ -228,7 +228,7 @@ public class BaseActivity extends AppCompatActivity {
     public void selecionarArquivoUnico(OnArquivoSelecionadoListener callback) {
         this.callbackSelecionarUriArquivoUnico = callback;
 
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.setType("*/*");
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, false);
         selecionarArquivosLauncher.launch(intent);

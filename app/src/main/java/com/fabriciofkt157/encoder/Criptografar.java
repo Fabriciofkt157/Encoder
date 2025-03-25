@@ -303,17 +303,23 @@ public class Criptografar extends BaseActivity{
             Uri arquivoTemp = FileUtils.salvarArquivo(Criptografar.this, uri, nomeTemp, null);
             FileUtils.salvarListaEmArquivo(Criptografar.this, arquivoTemp, listaDePastasArquivos);
 
-            String nomeArquivoAes = "arquivos_criptografados.aes";
+            String nomeArquivoAes = "arquivos_criptografados_" + System.currentTimeMillis() + ".aes";
             Uri uriArquivoAes = FileUtils.salvarArquivo(Criptografar.this, uri, nomeArquivoAes, null);
             Crypt.criptografarArquivo(Criptografar.this, arquivoTemp, uriArquivoAes, chaveGerada);
 
             FileUtils.deleteFileFromUri(Criptografar.this, arquivoTemp);
 
-            Map<Uri, byte[]> mapaDeChaves = FileUtils.carregarMap(this);
-            mapaDeChaves.put(uriArquivoAes, chaveGerada);
+            Map<String, byte[]> mapaDeChaves = FileUtils.carregarMap(this);
+            mapaDeChaves.put(nomeArquivoAes, chaveGerada);
             FileUtils.salvarMap(this, mapaDeChaves);
-
             makeText(Criptografar.this, "Os dados foram salvos em: " + uri + "/" + nomeArquivoAes, Toast.LENGTH_SHORT).show();
+            new AlertDialog.Builder(this)
+                    .setTitle("Chave AES")
+                    .setMessage("Salvamos a chave AES no armazenamento do aplicativo.\n\n" +
+                            "Observação: não altere o nome do arquivo, caso contrário, terá que inserir a chave manualmente.\n\n" +
+                            "Ainda estamos trabalhando num gerenciador de chaves ... agurade :).")
+                    .setPositiveButton("Entendi", (dialog, which) -> dialog.dismiss())
+                    .show();
         });
         ativarBtns();
         estado = 0;
