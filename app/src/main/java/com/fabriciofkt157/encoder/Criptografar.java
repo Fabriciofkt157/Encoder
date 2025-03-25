@@ -255,6 +255,8 @@ public class Criptografar extends BaseActivity{
             Uri uriArquivoAes = FileUtils.salvarArquivo(Criptografar.this, uri, nomeArquivoAes, null);
             Crypt.criptografarArquivo(Criptografar.this, arquivoTemp, uriArquivoAes, chaveGerada);
 
+            FileUtils.deleteFileFromUri(Criptografar.this, arquivoTemp);
+
             makeText(Criptografar.this, "Os dados foram salvos em: " + uri + "/" + nomeArquivoAes, Toast.LENGTH_SHORT).show();
         });
     }
