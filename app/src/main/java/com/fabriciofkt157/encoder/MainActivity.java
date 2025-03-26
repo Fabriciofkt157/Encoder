@@ -84,7 +84,6 @@ public class MainActivity extends AppCompatActivity {
         handler.removeCallbacks(updateRunnable); // Para a atualização quando sair da tela
     }
 
-
     @SuppressLint("ClickableViewAccessibility")
     private void botaoPressionado(TextView btn){
         btn.setOnTouchListener((v, event) -> {

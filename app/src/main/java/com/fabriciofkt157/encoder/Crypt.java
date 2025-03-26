@@ -67,21 +67,21 @@ public class Crypt {
         }
     }
 
-    public static void descriptografarArquivo(Context context, Uri uriEntrada, Uri uriSaida, byte[] chaveAES) {
+    public static boolean descriptografarArquivo(Context context, Uri uriEntrada, Uri uriSaida, byte[] chaveAES) {
         try (
                 InputStream fis = context.getContentResolver().openInputStream(uriEntrada);
                 OutputStream fos = context.getContentResolver().openOutputStream(uriSaida)
         ) {
             if (fis == null || fos == null) {
                 Log.e("AESCrypt", "Erro ao abrir arquivos de entrada ou saída.");
-                return;
+                return false;
             }
 
             // Ler o IV (16 bytes) do início do arquivo
             byte[] iv = new byte[16];
             if (fis.read(iv) != 16) {
                 Log.e("AESCrypt", "Erro ao ler o IV.");
-                return;
+                return false;
             }
             IvParameterSpec ivSpec = new IvParameterSpec(iv);
 
@@ -108,11 +108,15 @@ public class Crypt {
                 fos.write(finalBytes);
             }
             Log.d("AESCrypt", "Arquivo descriptografado com sucesso!");
+            return true;
         } catch (Exception e) {
             Log.e("AESCrypt", "Erro na descriptografia: " + e.getMessage());
-            Toast.makeText(context, "Erro ao descriptografar o arquivo" + e.getMessage(), Toast.LENGTH_SHORT).show();
+            //Toast.makeText(context, "Erro ao descriptografar o arquivo" + e.getMessage(), Toast.LENGTH_SHORT).show();
+            return false;
         }
     }
+
+
 
     public static byte[] gerarChaveAES(String key, int keySize) throws NoSuchAlgorithmException {
         if(key != null){

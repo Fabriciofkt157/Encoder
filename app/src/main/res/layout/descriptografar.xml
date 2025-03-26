@@ -79,7 +79,7 @@
             android:layout_width="333dp"
             android:layout_height="135dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/senha_descriptografar" />
+            android:src="@drawable/descriptografar_senha" />
 
         <EditText
             android:id="@+id/edit_senha"
@@ -111,7 +111,7 @@
             android:layout_width="333dp"
             android:layout_height="135dp"
             android:scaleType="centerCrop"
-            android:src="@drawable/senha_descriptografar" />
+            android:src="@drawable/descriptografar_chave" />
 
         <EditText
             android:id="@+id/edit_chave"

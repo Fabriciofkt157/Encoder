@@ -195,7 +195,7 @@ public class FileUtils {
 
 
     // Converter byte[] para String hexadecimal
-    private static String bytesToHex(byte[] bytes) {
+    public static String bytesToHex(byte[] bytes) {
         StringBuilder sb = new StringBuilder();
         for (byte b : bytes) {
             sb.append(String.format("%02X", b));
@@ -204,7 +204,7 @@ public class FileUtils {
     }
 
     // Converter String hexadecimal para byte[]
-    private static byte[] hexToBytes(String hex) {
+    public static byte[] hexToBytes(String hex) {
         int len = hex.length();
         byte[] data = new byte[len / 2];
         for (int i = 0; i < len; i += 2) {

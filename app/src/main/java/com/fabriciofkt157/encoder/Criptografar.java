@@ -170,7 +170,7 @@ public class Criptografar extends BaseActivity{
                 try {
                     chaveGerada = Crypt.gerarChaveAES(senhaUsuario, nivelDeSeguranca);
                     ClipboardManager clipboard = (ClipboardManager) this.getSystemService(Context.CLIPBOARD_SERVICE);
-                    ClipData clip = ClipData.newPlainText("Chave AES gerada", Arrays.toString(chaveGerada));
+                    ClipData clip = ClipData.newPlainText("Chave AES gerada", FileUtils.bytesToHex(chaveGerada));
                     clipboard.setPrimaryClip(clip);
                     new AlertDialog.Builder(this)
                             .setTitle("Chave AES")

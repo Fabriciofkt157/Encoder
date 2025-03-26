@@ -15,6 +15,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import static android.widget.Toast.makeText;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
 public class Descriptografar extends BaseActivity {
@@ -27,6 +28,7 @@ public class Descriptografar extends BaseActivity {
 
     byte[] chaveAES;
     String nomeArquivoCarregado, chaveInserida;
+    boolean descriptografar;
 
 
     @SuppressLint("SetTextI18n")
@@ -91,11 +93,7 @@ public class Descriptografar extends BaseActivity {
                     chave.setVisibility(View.VISIBLE);
                     edit_chave.setVisibility(View.VISIBLE);
                     btn_ok_chave.setVisibility(View.VISIBLE);
-                    btnCenter.setEnabled(false);
-                    btnCenter.setAlpha(0.25f);
-                    btnSelecionarArquivos.setEnabled(false);
-                    btnSelecionarArquivos.setAlpha(0.25f);
-                    tv_nome_arquivo.setAlpha(0.25f);
+                    desativarBtns();
 
                     edit_chave.requestFocus();
                     InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -118,16 +116,101 @@ public class Descriptografar extends BaseActivity {
                 edit_senha.setVisibility(View.VISIBLE);
                 btn_ok_senha.setVisibility(View.VISIBLE);
             } else {
-                chaveAES = chaveInserida.getBytes();
+                chaveAES = FileUtils.hexToBytes(chaveInserida);
                 descriptografia();
+            }
+        });
+
+        btn_ok_senha.setOnClickListener(v -> {
+            chaveInserida = edit_senha.getText().toString();
+            if(chaveInserida.isEmpty()){
+                makeText(this, "O campo senha não pode estar em branco", Toast.LENGTH_SHORT).show();
+            } else {
+                try {
+                    chaveAES = Crypt.gerarChaveAES(chaveInserida, 128);
+                } catch (NoSuchAlgorithmException e) {
+                    throw new RuntimeException(e);
+                }
+
+                selecionarPasta(uri -> {
+                    Uri arquivoTemp = FileUtils.salvarArquivo(this, uri, "temp_" + System.currentTimeMillis(), null);
+                    if(Crypt.descriptografarArquivo(this, arquivoSelecionado, arquivoTemp, chaveAES)){
+                        makeText(this, "O arquivo foi descriptografado com sucesso", Toast.LENGTH_SHORT).show();
+                        ativarBtns();
+                        senha.setVisibility(View.INVISIBLE);
+                        edit_senha.setVisibility(View.INVISIBLE);
+                        btn_ok_senha.setVisibility(View.INVISIBLE);
+                        Map<String, byte[]> mapaDeChaves = FileUtils.carregarMap(this);
+                        mapaDeChaves.put(nomeArquivoCarregado, chaveAES);
+                        FileUtils.salvarMap(this, mapaDeChaves);
+                        makeText(this, "Salvamos a nova chave no armazenamento do aplicativo.", Toast.LENGTH_SHORT).show();
+                    } else {
+                        try {
+                            chaveAES = Crypt.gerarChaveAES(chaveInserida, 196);
+                        } catch (NoSuchAlgorithmException e) {
+                            throw new RuntimeException(e);
+                        }
+                        if(Crypt.descriptografarArquivo(this, arquivoSelecionado, arquivoTemp, chaveAES)){
+                            makeText(this, "O arquivo foi descriptografado com sucesso", Toast.LENGTH_SHORT).show();
+                            ativarBtns();
+                            senha.setVisibility(View.INVISIBLE);
+                            edit_senha.setVisibility(View.INVISIBLE);
+                            btn_ok_senha.setVisibility(View.INVISIBLE);
+                            Map<String, byte[]> mapaDeChaves = FileUtils.carregarMap(this);
+                            mapaDeChaves.put(nomeArquivoCarregado, chaveAES);
+                            FileUtils.salvarMap(this, mapaDeChaves);
+                            makeText(this, "Salvamos a nova chave no armazenamento do aplicativo.", Toast.LENGTH_SHORT).show();
+                        } else {
+                            try {
+                                chaveAES = Crypt.gerarChaveAES(chaveInserida, 256);
+                            } catch (NoSuchAlgorithmException e) {
+                                throw new RuntimeException(e);
+                            }
+                            if(Crypt.descriptografarArquivo(this, arquivoSelecionado, arquivoTemp, chaveAES)){
+                                makeText(this, "O arquivo foi descriptografado com sucesso", Toast.LENGTH_SHORT).show();
+                                ativarBtns();
+                                senha.setVisibility(View.INVISIBLE);
+                                edit_senha.setVisibility(View.INVISIBLE);
+                                btn_ok_senha.setVisibility(View.INVISIBLE);
+                                Map<String, byte[]> mapaDeChaves = FileUtils.carregarMap(this);
+                                mapaDeChaves.put(nomeArquivoCarregado, chaveAES);
+                                FileUtils.salvarMap(this, mapaDeChaves);
+                                makeText(this, "Salvamos a nova chave no armazenamento do aplicativo.", Toast.LENGTH_SHORT).show();
+                            } else {
+                                makeText(this, "Senha incorreta ou possível erro de digitação", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    }
+                });
             }
         });
     }
 
+    public void ativarBtns(){
+        btnCenter.setEnabled(true);
+        btnCenter.setAlpha(1f);
+        btnSelecionarArquivos.setEnabled(true);
+        btnSelecionarArquivos.setAlpha(1f);
+        tv_nome_arquivo.setAlpha(1f);
+    }
+    public void desativarBtns(){
+        btnCenter.setEnabled(false);
+        btnCenter.setAlpha(0.25f);
+        btnSelecionarArquivos.setEnabled(false);
+        btnSelecionarArquivos.setAlpha(0.25f);
+        tv_nome_arquivo.setAlpha(0.25f);
+    }
     public void descriptografia(){
         selecionarPasta(uri -> {
             Uri arquivoTemp = FileUtils.salvarArquivo(this, uri, "temp_" + System.currentTimeMillis(), null);
-            Crypt.descriptografarArquivo(this, arquivoSelecionado, arquivoTemp, chaveAES);
+            if(Crypt.descriptografarArquivo(this, arquivoSelecionado, arquivoTemp, chaveAES)){
+                ativarBtns();
+                senha.setVisibility(View.INVISIBLE);
+                edit_senha.setVisibility(View.INVISIBLE);
+                btn_ok_senha.setVisibility(View.INVISIBLE);
+            } else {
+                makeText(this, "Chave incorreta ou mal inserida.", Toast.LENGTH_SHORT).show();
+            }
         });
     }
     public void limparArquivoCarregado(){
