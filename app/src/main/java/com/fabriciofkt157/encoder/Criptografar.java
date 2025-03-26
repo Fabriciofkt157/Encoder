@@ -8,6 +8,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -121,7 +122,7 @@ public class Criptografar extends BaseActivity{
             }
             else {
                 makeText(this, "Selecione a pasta que deseja criptografar", Toast.LENGTH_SHORT).show();
-                selecionarPasta(uri -> {
+                selecionarPasta(false, uri -> {
                     urisPastasSelecionadas.add(uri);
                     atualizarEstadoArquivos(urisArquivosSelecionados, urisPastasSelecionadas, tv_nome_arquivo);
                     arquivos = true;
@@ -292,19 +293,20 @@ public class Criptografar extends BaseActivity{
                 String nome = "/" + nomeArquivoPorUri(uri);
                 byte[] dados = obterBytesDeUri(uri);
                 arquivosIndividuais.put(nome, dados);
-                listaDePastasArquivos.add(arquivosIndividuais);
             }
+            listaDePastasArquivos.add(arquivosIndividuais);
         }
 
         //captar a pasta destino e criptografar
 
-        selecionarPasta(uri -> {
+        selecionarPasta(false, uri -> {
             String nomeTemp = "temp" + System.currentTimeMillis();
-            Uri arquivoTemp = FileUtils.salvarArquivo(Criptografar.this, uri, nomeTemp, null);
+            Uri arquivoTemp = FileUtils.salvarArquivo(Criptografar.this, false, uri, nomeTemp, null);
+            Log.i("Lista de pastas e arquivos:", listaDePastasArquivos.toString());
             FileUtils.salvarListaEmArquivo(Criptografar.this, arquivoTemp, listaDePastasArquivos);
 
             String nomeArquivoAes = "arquivos_criptografados_" + System.currentTimeMillis() + ".aes";
-            Uri uriArquivoAes = FileUtils.salvarArquivo(Criptografar.this, uri, nomeArquivoAes, null);
+            Uri uriArquivoAes = FileUtils.salvarArquivo(Criptografar.this, false, uri, nomeArquivoAes, null);
             Crypt.criptografarArquivo(Criptografar.this, arquivoTemp, uriArquivoAes, chaveGerada);
 
             FileUtils.deleteFileFromUri(Criptografar.this, arquivoTemp);
@@ -324,6 +326,29 @@ public class Criptografar extends BaseActivity{
         ativarBtns();
         estado = 0;
     }
+    public static Uri criarPasta(Context context, Uri uriPai, String nomePasta) {
+        try {
+            // Criar a pasta dentro do diretório pai
+            Uri uriNovaPasta = DocumentsContract.createDocument(
+                    context.getContentResolver(),
+                    uriPai,
+                    DocumentsContract.Document.MIME_TYPE_DIR,
+                    nomePasta
+            );
+
+            if (uriNovaPasta != null) {
+                Log.d("CriarPasta", "Pasta criada: " + uriNovaPasta.toString());
+            } else {
+                Log.e("CriarPasta", "Falha ao criar a pasta: " + nomePasta);
+            }
+
+            return uriNovaPasta; // Retorna o URI da pasta criada
+        } catch (Exception e) {
+            Log.e("CriarPasta", "Erro ao criar pasta", e);
+            return null;
+        }
+    }
+
 
     private AlertDialog.Builder getBuilder(FrameLayout senha, ImageButton btn_ok, EditText edit_senha) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);

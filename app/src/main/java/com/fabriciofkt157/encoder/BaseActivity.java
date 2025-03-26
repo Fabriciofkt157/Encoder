@@ -273,9 +273,14 @@ public class BaseActivity extends AppCompatActivity {
                     }
                 }
     });
-    public void selecionarPasta(OnPastaSelecionadaListener callback){
+    public void selecionarPasta(boolean permissao, OnPastaSelecionadaListener callback){
         this.callbackSelecionarPasta = callback;
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        if(permissao) {
+            intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+        }
+
         selecionarPastaLauncher.launch(intent);
     }
     public interface OnArquivosSelecionadosListener {

@@ -1,6 +1,8 @@
 package com.fabriciofkt157.encoder;
 
 import android.content.Context;
+import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.provider.DocumentsContract;
 import android.util.Log;
@@ -14,12 +16,16 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,11 +52,19 @@ public class FileUtils {
     }*/
 
 
-    public static Uri salvarArquivo(Context context, Uri uriPasta, String nomeArquivo, byte[] dados) {
+    public static Uri salvarArquivo(Context context, boolean descompilar, Uri uriPasta, String nomeArquivo, byte[] dados) {
         try {
             // Cria o documento dentro da pasta selecionada
-            Uri uriDiretorio = DocumentsContract.buildDocumentUriUsingTree(uriPasta,
-                    DocumentsContract.getTreeDocumentId(uriPasta));
+
+            Uri uriDiretorio;
+            if(!descompilar) {
+                uriDiretorio = DocumentsContract.buildDocumentUriUsingTree(uriPasta,
+                        DocumentsContract.getTreeDocumentId(uriPasta));
+            } else {
+                uriDiretorio = uriPasta;
+            }
+
+
 
             Uri arquivoUri = DocumentsContract.createDocument(
                     context.getContentResolver(),
@@ -75,6 +89,89 @@ public class FileUtils {
         }
         return null;
     }
+
+    public static Uri criarPasta(Context context, Uri uriPai, String nomePasta) {
+        try {
+            // Obter o ID correto do documento para manipulação
+            String documentoId = DocumentsContract.getTreeDocumentId(uriPai);
+            Uri uriDiretorio = DocumentsContract.buildChildDocumentsUriUsingTree(uriPai, documentoId);
+
+            // Verificar se a pasta já existe
+            Uri uriExistente = verificarPastaExistente(context, uriDiretorio, nomePasta);
+            if (uriExistente != null) {
+                // A pasta já existe, retornar o URI dela
+                Log.d("CriarPasta", "Pasta já existe: " + uriExistente.toString());
+                return uriExistente;
+            }
+
+            // Criar a nova pasta
+            Uri uriNovaPasta = DocumentsContract.createDocument(
+                    context.getContentResolver(),
+                    uriDiretorio,
+                    DocumentsContract.Document.MIME_TYPE_DIR,
+                    nomePasta
+            );
+
+            if (uriNovaPasta != null) {
+                Log.d("CriarPasta", "Pasta criada com sucesso: " + uriNovaPasta.toString());
+            } else {
+                Log.e("CriarPasta", "Falha ao criar a pasta: " + nomePasta);
+            }
+
+            return uriNovaPasta; // Retorna o URI da nova pasta
+        } catch (Exception e) {
+            Log.e("CriarPasta", "Erro ao criar pasta", e);
+            return null;
+        }
+    }
+
+    private static Uri verificarPastaExistente(Context context, Uri uriPai, String nomePasta) {
+        try {
+            // Obtém o ID do documento do URI pai
+            String documentId = DocumentsContract.getDocumentId(uriPai);
+            // Constrói o URI que lista os documentos filhos
+            Uri childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(uriPai, documentId);
+
+            Cursor cursor = context.getContentResolver().query(
+                    childrenUri,
+                    null, // Todas as colunas
+                    null, // Sem filtro
+                    null, // Sem argumentos de filtro
+                    null  // Sem ordenação
+            );
+            if (cursor != null) {
+                int displayNameIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME);
+                int documentIdIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID);
+                if (displayNameIndex == -1 || documentIdIndex == -1) {
+                    Log.e("VerificarPastaExistente", "Colunas necessárias não foram encontradas.");
+                    cursor.close();
+                    return null;
+                }
+                while (cursor.moveToNext()) {
+                    String nomeDocumento = cursor.getString(displayNameIndex);
+                    if (nomeDocumento.equals(nomePasta)) {
+                        String docId = cursor.getString(documentIdIndex);
+                        Uri uriDocumento = DocumentsContract.buildDocumentUriUsingTree(uriPai, docId);
+                        cursor.close();
+                        return uriDocumento;
+                    }
+                }
+                cursor.close();
+            }
+        } catch (Exception e) {
+            Log.e("VerificarPastaExistente", "Erro ao verificar se a pasta existe", e);
+        }
+        return null;
+    }
+
+    public static boolean temPermissaoParaEscrever(Context context, Uri uri) {
+        int flags = Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION;
+        context.getContentResolver().takePersistableUriPermission(uri, flags);
+
+        return (context.getContentResolver().getPersistedUriPermissions().stream()
+                .anyMatch(p -> p.getUri().equals(uri) && p.isWritePermission()));
+    }
+
     public static void salvarListaEmArquivo(Context context, Uri uriDestino, List<Map<String, byte[]>> lista) {
         try {
             // Obtém um OutputStream do Uri usando ContentResolver
@@ -90,23 +187,97 @@ public class FileUtils {
             oos.close();
             outputStream.close();
 
-            Log.d("SalvarArquivo", "Dados salvos com sucesso no Uri: " + uriDestino.toString());
+            Log.d("SalvarArquivo", "Dados salvos com sucesso no Uri: " + uriDestino);
         } catch (IOException e) {
             Log.e("SalvarArquivo", "Erro ao salvar no Uri", e);
         }
     }
-    public static void logarMap(Map<Uri, byte[]> uriMap) {
-        if (uriMap.isEmpty()) {
-            Log.d("UriStorage", "O mapa está vazio.");
-            return;
+
+    public static void restaurarArquivosDeMapa(Context context, Uri uriArquivoSalvo, Uri uriDestino) {
+        try {
+            // Abrir o arquivo salvo para leitura
+            InputStream inputStream = context.getContentResolver().openInputStream(uriArquivoSalvo);
+            if (inputStream == null) {
+                throw new IOException("Não foi possível abrir InputStream para o Uri fornecido.");
+            }
+
+            // Desserializar a lista de mapas
+            ObjectInputStream ois = new ObjectInputStream(inputStream);
+
+            List<Map<String, byte[]>> listaDePastasArquivos = (List<Map<String, byte[]>>) ois.readObject();
+            //Log.i("Lista pastas de arquivos: ", listaDePastasArquivos.toString());
+            ois.close();
+            inputStream.close();
+
+            // Iterar sobre os mapas e recriar a estrutura de arquivos e pastas
+            for (Map<String, byte[]> estruturaPasta : listaDePastasArquivos) {
+                for (Map.Entry<String, byte[]> entrada : estruturaPasta.entrySet()) {
+                    String caminhoRelativo = entrada.getKey();
+                    byte[] dados = entrada.getValue();
+
+                    // Separar diretórios e nome do arquivo
+                    int indexUltimaBarra = caminhoRelativo.lastIndexOf("/");
+                    String caminhoDiretorio = indexUltimaBarra > 0 ? caminhoRelativo.substring(0, indexUltimaBarra) : "";
+                    String nomeArquivo = caminhoRelativo.substring(indexUltimaBarra + 1);
+
+                    // Criar diretórios se necessário
+                    Uri uriPastaAtual = uriDestino;
+
+                    if (!caminhoDiretorio.isEmpty()) {
+                        uriPastaAtual = criarEstruturaDePastas(context, uriDestino, caminhoDiretorio);
+                    }
+
+                    // Criar o arquivo na pasta correta
+                    Uri arquivoCriado = salvarArquivo(context, true, uriPastaAtual, nomeArquivo, dados);
+
+
+                    if (arquivoCriado != null) {
+                        Log.d("RestaurarArquivo", "Arquivo restaurado: " + arquivoCriado.toString());
+                    } else {
+                        Log.e("RestaurarArquivo", "Falha ao restaurar arquivo: " + nomeArquivo);
+                    }
+                }
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            Log.e("RestaurarArquivo", "Erro ao restaurar arquivos", e);
+        }
+    }
+
+    public static Uri criarEstruturaDePastas(Context context, Uri uriRaiz, String caminho) throws FileNotFoundException {
+        String[] pastas = caminho.split("/");
+        Log.i("pastas", Arrays.toString(pastas));
+
+        // Se a primeira entrada for vazia, removê-la
+        if (pastas.length > 0 && pastas[0].isEmpty()) {
+            pastas = Arrays.copyOfRange(pastas, 1, pastas.length);
         }
 
-        for (Map.Entry<Uri, byte[]> entry : uriMap.entrySet()) {
-            String uriString = entry.getKey().toString();
-            String chaveHex = bytesToHex(entry.getValue());
+        Uri uriAtual = uriRaiz;
+        Log.i("estrutura pastas, uriRaiz", uriRaiz.toString());
+        Log.i("pastas", Arrays.toString(pastas));
 
-            Log.d("UriStorage", "URI: " + uriString + " | Chave: " + chaveHex);
+        for (String pasta : pastas) {
+            Log.i("pasta", pasta);
+            Log.i("Uri atual", uriAtual.toString());
+
+            Uri novaPasta = verificarPastaExistente(context, uriAtual, pasta);
+            if (novaPasta == null) {
+                novaPasta = DocumentsContract.createDocument(
+                        context.getContentResolver(),
+                        uriAtual,
+                        DocumentsContract.Document.MIME_TYPE_DIR,
+                        pasta
+                );
+            }
+
+            if (novaPasta != null) {
+                uriAtual = novaPasta;
+            } else {
+                Log.e("CriarPastas", "Erro ao criar ou encontrar a pasta: " + pasta);
+                return uriRaiz;
+            }
         }
+        return uriAtual;
     }
 
 
@@ -176,7 +347,7 @@ public class FileUtils {
 
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject jsonObject = jsonArray.getJSONObject(i);
-                String nomeArquivo = String.valueOf(jsonObject.getString("nome"));
+                String nomeArquivo = jsonObject.getString("nome");
                 byte[] chave = hexToBytes(jsonObject.getString("chave"));
                 uriMap.put(nomeArquivo, chave);
             }
