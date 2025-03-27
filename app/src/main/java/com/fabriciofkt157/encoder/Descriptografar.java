@@ -116,8 +116,14 @@ public class Descriptografar extends BaseActivity {
                 edit_senha.setVisibility(View.VISIBLE);
                 btn_ok_senha.setVisibility(View.VISIBLE);
             } else {
-                chaveAES = FileUtils.hexToBytes(chaveInserida);
-                descriptografia();
+                if(chaveInserida.length() != 32 && chaveInserida.length() != 48 && chaveInserida.length() != 64){
+                    makeText(this, "formato de chave inadequado. Apenas chaves hexadecimais", Toast.LENGTH_SHORT).show();
+                    makeText(this, "Deixe em branco para usar a senha, ou verifique a digitação..", Toast.LENGTH_SHORT).show();
+                } else {
+                    chaveAES = FileUtils.hexToBytes(chaveInserida);
+                    descriptografia();
+                }
+
             }
         });
 
@@ -136,12 +142,7 @@ public class Descriptografar extends BaseActivity {
                     Uri arquivoTemp = FileUtils.salvarArquivo(this, false, uri, "temp_" + System.currentTimeMillis(), null);
                     pastaDestino = uri;
                     if(Crypt.descriptografarArquivo(this, arquivoSelecionado, arquivoTemp, chaveAES)){
-                        makeText(this, "O arquivo foi descriptografado com sucesso", Toast.LENGTH_SHORT).show();
-                        descompilar(arquivoTemp);
-                        Map<String, byte[]> mapaDeChaves = FileUtils.carregarMap(this);
-                        mapaDeChaves.put(nomeArquivoCarregado, chaveAES);
-                        FileUtils.salvarMap(this, mapaDeChaves);
-                        makeText(this, "Salvamos a nova chave no armazenamento do aplicativo.", Toast.LENGTH_SHORT).show();
+                        sucessoSenha(arquivoTemp);
                     } else {
                         try {
                             chaveAES = Crypt.gerarChaveAES(chaveInserida, 196);
@@ -149,11 +150,7 @@ public class Descriptografar extends BaseActivity {
                             throw new RuntimeException(e);
                         }
                         if(Crypt.descriptografarArquivo(this, arquivoSelecionado, arquivoTemp, chaveAES)){
-                            makeText(this, "O arquivo foi descriptografado com sucesso", Toast.LENGTH_SHORT).show();
-                            descompilar(arquivoTemp);
-                            Map<String, byte[]> mapaDeChaves = FileUtils.carregarMap(this);
-                            mapaDeChaves.put(nomeArquivoCarregado, chaveAES);
-                            FileUtils.salvarMap(this, mapaDeChaves);
+                            sucessoSenha(arquivoTemp);
                             makeText(this, "Salvamos a nova chave no armazenamento do aplicativo.", Toast.LENGTH_SHORT).show();
                         } else {
                             try {
@@ -162,11 +159,7 @@ public class Descriptografar extends BaseActivity {
                                 throw new RuntimeException(e);
                             }
                             if(Crypt.descriptografarArquivo(this, arquivoSelecionado, arquivoTemp, chaveAES)){
-                                makeText(this, "O arquivo foi descriptografado com sucesso", Toast.LENGTH_SHORT).show();
-                                descompilar(arquivoTemp);
-                                Map<String, byte[]> mapaDeChaves = FileUtils.carregarMap(this);
-                                mapaDeChaves.put(nomeArquivoCarregado, chaveAES);
-                                FileUtils.salvarMap(this, mapaDeChaves);
+                                sucessoSenha(arquivoTemp);
                                 makeText(this, "Salvamos a nova chave no armazenamento do aplicativo.", Toast.LENGTH_SHORT).show();
                             } else {
                                 makeText(this, "Senha incorreta ou possível erro de digitação", Toast.LENGTH_SHORT).show();
@@ -176,6 +169,15 @@ public class Descriptografar extends BaseActivity {
                 });
             }
         });
+    }
+
+    public void sucessoSenha(Uri arquivoTemp){
+        makeText(this, "O arquivo foi descriptografado com sucesso", Toast.LENGTH_SHORT).show();
+        descompilar(arquivoTemp);
+        Map<String, byte[]> mapaDeChaves = FileUtils.carregarMap(this);
+        mapaDeChaves.put(nomeArquivoCarregado, chaveAES);
+        FileUtils.salvarMap(this, mapaDeChaves);
+        makeText(this, "Salvamos a nova chave no armazenamento do aplicativo.", Toast.LENGTH_SHORT).show();
     }
 
     public void ativarBtns(){
@@ -215,6 +217,7 @@ public class Descriptografar extends BaseActivity {
             Log.i("pasta final:", String.valueOf(pastaFinal));
             FileUtils.restaurarArquivosDeMapa(this, arquivoTemp, pastaFinal);
         } else makeText(this, "Sem permissão de escrita para a pasta destino", Toast.LENGTH_SHORT).show();
+        FileUtils.deleteFileFromUri(this, arquivoTemp);
 
         ativarBtns();
         senha.setVisibility(View.INVISIBLE);

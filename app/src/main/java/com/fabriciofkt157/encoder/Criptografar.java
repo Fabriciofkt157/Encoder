@@ -326,29 +326,6 @@ public class Criptografar extends BaseActivity{
         ativarBtns();
         estado = 0;
     }
-    public static Uri criarPasta(Context context, Uri uriPai, String nomePasta) {
-        try {
-            // Criar a pasta dentro do diretório pai
-            Uri uriNovaPasta = DocumentsContract.createDocument(
-                    context.getContentResolver(),
-                    uriPai,
-                    DocumentsContract.Document.MIME_TYPE_DIR,
-                    nomePasta
-            );
-
-            if (uriNovaPasta != null) {
-                Log.d("CriarPasta", "Pasta criada: " + uriNovaPasta.toString());
-            } else {
-                Log.e("CriarPasta", "Falha ao criar a pasta: " + nomePasta);
-            }
-
-            return uriNovaPasta; // Retorna o URI da pasta criada
-        } catch (Exception e) {
-            Log.e("CriarPasta", "Erro ao criar pasta", e);
-            return null;
-        }
-    }
-
 
     private AlertDialog.Builder getBuilder(FrameLayout senha, ImageButton btn_ok, EditText edit_senha) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
