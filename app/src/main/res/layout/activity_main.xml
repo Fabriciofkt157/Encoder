@@ -42,7 +42,7 @@
         android:layout_marginTop="12dp"
         android:background="@drawable/botao_arredondado"
         android:fontFamily="@font/jersey10_regular"
-        android:text=" base 64"
+        android:text=" Base64"
         android:textColor="@color/cinza_background"
         android:textSize="32sp"
         app:layout_constraintStart_toStartOf="parent"

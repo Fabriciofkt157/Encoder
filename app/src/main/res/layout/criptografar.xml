@@ -246,7 +246,7 @@
             android:layout_marginStart="10dp"
             android:layout_marginTop="180dp"
             android:fontFamily="@font/jersey10_regular"
-            android:text=" base 64"
+            android:text=" Base64"
             android:textColor="@color/cinza_background"
             android:textSize="32sp"
             android:background="@color/background_cinza_claro"/>

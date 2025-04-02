@@ -24,13 +24,16 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.documentfile.provider.DocumentFile;
 
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class BaseActivity extends AppCompatActivity {
@@ -39,7 +42,7 @@ public class BaseActivity extends AppCompatActivity {
     TextView encoder, encoderM, btn_selecionar_comparador, btn_selecionar_sha256, btn_selecionar_criptografar, btn_selecionar_descriptografar, btn_selecionar_base64;
     boolean menuAtivado = false;
     FrameLayout frame_selecionar_operacao;
-    int btn_menu_mode = 0, op_modo, modo = 0;
+    int btn_menu_mode = 0, op_modo, modo = 0, fn_op = 0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -137,14 +140,32 @@ public class BaseActivity extends AppCompatActivity {
                 Ferramentas.limparBg(null, btnsMenu, R.color.background_cinza_claro);
                 btnsMenu[index].setBackgroundResource(R.color.cinza_azulado_claro);
                 op_modo = index;
-                if(index == 0){
-                    Intent intent = new Intent(this, Criptografar.class);
-                    startActivity(intent);
-                    finish();
-                } else if(index == 1){
-                    Intent intent = new Intent(this, Descriptografar.class);
-                    startActivity(intent);
-                    finish();
+                Intent intent;
+                switch(op_modo){
+                    case 0:
+                        intent = new Intent(this, Criptografar.class);
+                        startActivity(intent);
+                        finish();
+                        break;
+                    case 1:
+                        intent = new Intent(this, Descriptografar.class);
+                        startActivity(intent);
+                        finish();
+                        break;
+                    case 2:
+                        intent = new Intent(this, Base64Tradutor.class);
+                        startActivity(intent);
+                        finish();
+                        break;
+                    case 3:
+                        intent = new Intent(this, SHA256.class);
+                        startActivity(intent);
+                        finish();
+                        break;
+                    case 4:
+                        break;
+                    default:
+                        throw new RuntimeException("Erro inesperado, op_modo fora de controle");
                 }
             });
         }
@@ -165,7 +186,7 @@ public class BaseActivity extends AppCompatActivity {
         }
         nomesArquivos.append("Note que ainda é possível selecionar mais arquivos :)");
         tv_nome_arquivo.setText(nomesArquivos.toString());
-        if(uriArquivosSelecionados.size() + uriPastasSelecionadas.size() > 1) {
+        if(uriArquivosSelecionados.size() + uriPastasSelecionadas.size() > 1 && fn_op == 0) {
             makeText(this, "Você seleciou múltiplos arquivos,", Toast.LENGTH_LONG).show();
             makeText(this, "eles serão compactados em apenas um que depois será criptografado.", Toast.LENGTH_SHORT).show();
         }
@@ -200,7 +221,7 @@ public class BaseActivity extends AppCompatActivity {
         try (InputStream inputStream = getContentResolver().openInputStream(fileUri);
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
-            byte[] buffer = new byte[4096];
+            byte[] buffer = new byte[1024*1024*10];
             int bytesRead;
 
             while ((bytesRead = Objects.requireNonNull(inputStream).read(buffer)) != -1) {
@@ -289,11 +310,51 @@ public class BaseActivity extends AppCompatActivity {
     }
     public interface OnArquivoSelecionadoListener {
         void onArquivoSelecionado(Uri uri);
-
     }
 
     public interface OnPastaSelecionadaListener {
         void onPastaSelecionada(Uri uri);
+    }
+
+    public Map<String, byte[]> capturarEstruturaPasta(Uri pastaUri) {
+        Map<String, byte[]> arquivosMap = new HashMap<>();
+        DocumentFile pasta = DocumentFile.fromTreeUri(this, pastaUri);
+
+        if (pasta != null && pasta.isDirectory()) {
+            capturarArquivosRecursivamente(pasta, "", arquivosMap);
+        }
+        return arquivosMap;
+    }
+
+    private void capturarArquivosRecursivamente(DocumentFile pasta, String caminhoAtual, Map<String, byte[]> arquivosMap) {
+        for (DocumentFile file : pasta.listFiles()) {
+            String caminho = caminhoAtual + "/" + file.getName();
+
+            if (file.isDirectory()) {
+                Log.d("Pasta", "📁 " + caminho);
+                capturarArquivosRecursivamente(file, caminho, arquivosMap);
+            } else {
+                Log.d("Arquivo", "📄 " + caminho);
+                arquivosMap.put(caminho, lerArquivoParaBytes(file.getUri()));
+            }
+        }
+    }
+
+    private byte[] lerArquivoParaBytes(Uri fileUri) {
+        try (InputStream inputStream = getContentResolver().openInputStream(fileUri);
+             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+
+            while ((bytesRead = Objects.requireNonNull(inputStream).read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+            return outputStream.toByteArray();
+        } catch (IOException e) {
+            Log.e("ErroLeitura", "Erro ao ler arquivo: " + fileUri, e);
+            return null;
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")

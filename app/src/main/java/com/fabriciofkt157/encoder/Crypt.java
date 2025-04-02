@@ -3,8 +3,8 @@ package com.fabriciofkt157.encoder;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
-import android.widget.Toast;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.MessageDigest;
@@ -47,7 +47,7 @@ public class Crypt {
             fos.write(iv);
 
             // Criar buffer para leitura e criptografia
-            byte[] buffer = new byte[8196];
+            byte[] buffer = new byte[1024*1024*10];
             int bytesRead;
             while ((bytesRead = fis.read(buffer)) != -1) {
                 byte[] dadosCriptografados = cipher.update(buffer, 0, bytesRead);
@@ -93,7 +93,7 @@ public class Crypt {
             cipher.init(Cipher.DECRYPT_MODE, secretKey, ivSpec);
 
             // Criar buffer para leitura e descriptografia
-            byte[] buffer = new byte[8196];
+            byte[] buffer = new byte[1024*1024*10];
             int bytesRead;
             while ((bytesRead = fis.read(buffer)) != -1) {
                 byte[] dadosDescriptografados = cipher.update(buffer, 0, bytesRead);

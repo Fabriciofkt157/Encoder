@@ -4,7 +4,6 @@ import static android.widget.Toast.makeText;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
@@ -14,14 +13,12 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final int REQUEST_CODE_WRITE_STORAGE = 1;
 
     TextView btn_selecionar_criptografar, btn_selecionar_descriptografar, btn_selecionar_base64, btn_selecionar_sha256, btn_selecionar_comparador;
     @Override
@@ -52,11 +49,15 @@ public class MainActivity extends AppCompatActivity {
         });
         btn_selecionar_base64.setOnClickListener(v -> {
             botaoPressionado(btn_selecionar_base64);
-            makeText(this, "Ainda trabalhando nisso...", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(this, Base64Tradutor.class);
+            startActivity(intent);
+            finish();
         });
         btn_selecionar_sha256.setOnClickListener(v -> {
             botaoPressionado(btn_selecionar_sha256);
-            makeText(this, "Ainda trabalhando nisso...", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(this, SHA256.class);
+            startActivity(intent);
+            finish();
         });
         btn_selecionar_comparador.setOnClickListener(v -> {
             botaoPressionado(btn_selecionar_comparador);

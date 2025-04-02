@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background">
+
+    <TextView
+        android:id="@+id/tv_encoder"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/jersey10_regular"
+        android:text="Encoder"
+        android:textColor="@android:color/white"
+        android:textSize="64sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.044"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteY="0dp"
+        tools:ignore="MissingConstraints" />
+    <TextView
+        android:id="@+id/tv_encoder_modo"
+        android:layout_width="109dp"
+        android:layout_height="18dp"
+        android:layout_marginStart="200dp"
+        android:fontFamily="@font/jersey10_regular"
+        android:text="SHA-256"
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.044"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="37dp"
+        tools:ignore="MissingConstraints" />
+
+    <ImageButton
+        android:id="@+id/btn_select_files"
+        android:layout_width="333dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="28dp"
+        android:background="@drawable/arquivos_sha256"
+        android:contentDescription="Selecione os arquivos"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_encoder"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <ImageButton
+        android:id="@+id/selecionar_modo"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="28dp"
+        android:layout_marginEnd="7dp"
+        android:background="@drawable/arquivo"
+        android:contentDescription="Seleciona o modo de operação do seletor de arquivos"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.988"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_encoder" />
+
+    <TextView
+        android:id="@+id/nome_arquivo"
+        android:layout_width="365dp"
+        android:layout_height="110dp"
+        android:layout_marginTop="8dp"
+        android:fontFamily="@font/jersey10_regular"
+        android:text="*nenhum arquivo carregado"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_select_files" />
+
+    <ImageButton
+        android:id="@+id/btn_center"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:background="@drawable/btn_center"
+        android:contentDescription="Botão central"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:visibility="visible" />
+
+
+    <FrameLayout
+        android:id="@+id/frame_hash"
+        android:layout_width="324dp"
+        android:layout_height="545dp"
+        android:layout_marginBottom="100dp"
+        android:visibility="invisible"
+        android:background="@drawable/hashs"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/btn_select_files"
+        app:layout_constraintVertical_bias="0.0">
+
+        <ScrollView
+            android:layout_width="299dp"
+            android:layout_height="430dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="15dp"
+            tools:ignore="MissingConstraints,UselessParent">
+
+            <TextView
+                android:id="@+id/tv_hashes"
+
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:textColor="#333333"
+                android:textSize="16sp" />
+        </ScrollView>
+        <ImageButton
+            android:id="@+id/btn_copiar"
+            android:layout_width="200dp"
+            android:layout_height="30dp"
+            android:layout_marginTop="252dp"
+            android:layout_gravity="center"
+            android:background="@drawable/copiar"
+            android:contentDescription="voltar a tela anterior"
+            android:visibility="visible"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
+    </FrameLayout>
+
+    <ImageButton
+        android:id="@+id/btn_ok"
+        android:layout_width="333dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/ok"
+        android:contentDescription="voltar a tela anterior"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/frame_hash"/>
+
+    <FrameLayout
+        android:id="@+id/frame_selecionar_funcao"
+        android:layout_width="256dp"
+        android:layout_height="549dp"
+        android:background="@drawable/fundo_selecionar_operacao"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tv_info_menu"
+            android:layout_width="184dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:fontFamily="@font/jersey10_regular"
+            android:text="selecione a operação que deseja realizar:"
+            android:textColor="@color/roxo_escuro"
+            android:textSize="24sp"
+            android:background="@color/background_cinza_claro"/>
+
+        <TextView
+            android:id="@+id/btn_selecionar_criptografar"
+            android:layout_width="244dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="100dp"
+            android:fontFamily="@font/jersey10_regular"
+            android:text=" criptografar"
+            android:textColor="@color/cinza_background"
+            android:textSize="32sp"
+            android:background="@color/background_cinza_claro"/>
+
+        <TextView
+            android:id="@+id/btn_selecionar_descriptografar"
+            android:layout_width="243dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="140dp"
+            android:fontFamily="@font/jersey10_regular"
+            android:text=" descriptografar"
+            android:textColor="@color/cinza_background"
+            android:textSize="32sp"
+            android:background="@color/background_cinza_claro"/>
+
+        <TextView
+            android:id="@+id/btn_selecionar_base64"
+            android:layout_width="244dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="180dp"
+            android:fontFamily="@font/jersey10_regular"
+            android:text=" Base64"
+            android:textColor="@color/cinza_background"
+            android:textSize="32sp"
+            android:background="@color/background_cinza_claro"/>
+        <TextView
+            android:id="@+id/btn_selecionar_sha256"
+            android:layout_width="244dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="220dp"
+            android:fontFamily="@font/jersey10_regular"
+            android:text=" SHA-256"
+            android:textColor="@color/cinza_background"
+            android:textSize="32sp"
+            android:background="@color/background_cinza_claro"/>
+        <TextView
+            android:id="@+id/btn_selecionar_comparador"
+            android:layout_width="244dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="260dp"
+            android:fontFamily="@font/jersey10_regular"
+            android:text=" comparar arquivos entre dispositivos"
+            android:textColor="@color/cinza_background"
+            android:textSize="32sp"
+            android:background="@color/background_cinza_claro"/>
+    </FrameLayout>
+
+    <ImageButton
+        android:id="@+id/btn_menu"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="12dp"
+        android:background="@drawable/menu"
+        android:contentDescription="Menu"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:scaleType="centerCrop" />
+</androidx.constraintlayout.widget.ConstraintLayout>

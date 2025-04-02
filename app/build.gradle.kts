@@ -12,8 +12,8 @@ android {
         applicationId = "com.fabriciofkt157.encoder"
         minSdk = 24
         targetSdk = 35
-        versionCode = 22
-        versionName = "0.12.0"
+        versionCode = 26
+        versionName = "0.14.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

@@ -8,7 +8,6 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -27,7 +26,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +48,7 @@ public class Criptografar extends BaseActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.criptografar);
+        fn_op = 0;
 
         tv_nome_arquivo = findViewById(R.id.nome_arquivo);
         btnSelecionarArquivos = findViewById(R.id.btn_select_files);
@@ -237,46 +236,7 @@ public class Criptografar extends BaseActivity{
     }
 
 
-    public Map<String, byte[]> capturarEstruturaPasta(Uri pastaUri) {
-        Map<String, byte[]> arquivosMap = new HashMap<>();
-        DocumentFile pasta = DocumentFile.fromTreeUri(this, pastaUri);
 
-        if (pasta != null && pasta.isDirectory()) {
-            capturarArquivosRecursivamente(pasta, "", arquivosMap);
-        }
-        return arquivosMap;
-    }
-
-    private void capturarArquivosRecursivamente(DocumentFile pasta, String caminhoAtual, Map<String, byte[]> arquivosMap) {
-        for (DocumentFile file : pasta.listFiles()) {
-            String caminho = caminhoAtual + "/" + file.getName();
-
-            if (file.isDirectory()) {
-                Log.d("Pasta", "📁 " + caminho);
-                capturarArquivosRecursivamente(file, caminho, arquivosMap);
-            } else {
-                Log.d("Arquivo", "📄 " + caminho);
-                arquivosMap.put(caminho, lerArquivoParaBytes(file.getUri()));
-            }
-        }
-    }
-
-    private byte[] lerArquivoParaBytes(Uri fileUri) {
-        try (InputStream inputStream = getContentResolver().openInputStream(fileUri);
-             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-
-            byte[] buffer = new byte[4096];
-            int bytesRead;
-
-            while ((bytesRead = Objects.requireNonNull(inputStream).read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
-            }
-            return outputStream.toByteArray();
-        } catch (IOException e) {
-            Log.e("ErroLeitura", "Erro ao ler arquivo: " + fileUri, e);
-            return null;
-        }
-    }
 
     public void criptografia(){
         //ler dados
@@ -319,7 +279,7 @@ public class Criptografar extends BaseActivity{
                     .setTitle("Chave AES")
                     .setMessage("Salvamos a chave AES no armazenamento do aplicativo.\n\n" +
                             "Observação: não altere o nome do arquivo, caso contrário, terá que inserir a chave manualmente.\n\n" +
-                            "Ainda estamos trabalhando num gerenciador de chaves ... agurade :).")
+                            "Ainda estamos trabalhando num gerenciador de chaves ... aguarde :).")
                     .setPositiveButton("Entendi", (dialog, which) -> dialog.dismiss())
                     .show();
         });
