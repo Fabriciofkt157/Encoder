@@ -63,18 +63,39 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_encoder" />
 
-    <TextView
-        android:id="@+id/nome_arquivo"
-        android:layout_width="365dp"
-        android:layout_height="110dp"
-        android:layout_marginTop="8dp"
-        android:fontFamily="@font/jersey10_regular"
-        android:text="*nenhum arquivo carregado"
-        android:textColor="@android:color/white"
-        android:textSize="16sp"
+    <ImageButton
+        android:id="@+id/lixeira"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="88dp"
+        android:layout_marginEnd="7dp"
+        android:background="@drawable/lixeira"
+        android:contentDescription="retorna a seleção de arquivos para a anterior"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.988"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btn_select_files" />
+        app:layout_constraintTop_toBottomOf="@id/tv_encoder" />
+
+    <ScrollView
+        android:layout_width="326dp"
+        android:layout_height="113dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.188"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_select_files"
+        tools:ignore="MissingConstraints,UselessParent">
+
+        <TextView
+            android:id="@+id/nome_arquivo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/jersey10_regular"
+            android:text="nenhum arquivo carregado"
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
+    </ScrollView>
+
 
     <ImageButton
         android:id="@+id/btn_center"
@@ -95,7 +116,7 @@
         android:layout_height="545dp"
         android:layout_marginBottom="100dp"
         android:visibility="invisible"
-        android:background="@drawable/hashs"
+        android:background="@drawable/hashes"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
@@ -143,7 +164,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/frame_hash"/>
-
     <FrameLayout
         android:id="@+id/frame_selecionar_funcao"
         android:layout_width="256dp"
@@ -223,7 +243,6 @@
             android:textSize="32sp"
             android:background="@color/background_cinza_claro"/>
     </FrameLayout>
-
     <ImageButton
         android:id="@+id/btn_menu"
         android:layout_width="40dp"

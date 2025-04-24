@@ -20,7 +20,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
 public class Descriptografar extends BaseActivity {
-    ImageButton btnCenter, btn_ok_senha, btn_ok_chave, btnSelecionarArquivos;
+    ImageButton btnCenter, btn_ok_senha, btn_ok_chave, btnSelecionarArquivos, btn_lixeira;
     FrameLayout senha, chave;
     TextView tv_nome_arquivo;
     EditText edit_senha, edit_chave;
@@ -45,9 +45,10 @@ public class Descriptografar extends BaseActivity {
         chave = findViewById(R.id.frame_chave);
         tv_nome_arquivo = findViewById(R.id.nome_arquivo);
         btnSelecionarArquivos = findViewById(R.id.btn_select_files);
+        btn_lixeira = findViewById(R.id.lixeira);
         setupMenu();
         renderMenu(
-                new ImageButton[]{ btnSelecionarArquivos, btnCenter, btn_ok_senha, btn_ok_chave },
+                new ImageButton[]{ btnSelecionarArquivos, btnCenter, btn_ok_senha, btn_ok_chave, btn_lixeira },
                 new TextView[]{ encoder, encoderM, tv_nome_arquivo },
                 new FrameLayout[]{ senha, chave },
                 new EditText[]{ edit_senha, edit_chave }
@@ -100,6 +101,12 @@ public class Descriptografar extends BaseActivity {
                     imm.showSoftInput(edit_chave, InputMethodManager.SHOW_IMPLICIT);
                 }
             }
+        });
+
+        btn_lixeira.setOnClickListener(v -> {
+            arquivoSelecionado = null;
+            tv_nome_arquivo.setText("nenhum arquivo carregado");
+            makeText(this, "O arquivo selecionado foi removido.", Toast.LENGTH_SHORT).show();
         });
 
         edit_senha.setOnFocusChangeListener((v, hasFocus) -> edit_senha.setCursorVisible(hasFocus));
@@ -186,6 +193,8 @@ public class Descriptografar extends BaseActivity {
         btnSelecionarArquivos.setEnabled(true);
         btnSelecionarArquivos.setAlpha(1f);
         tv_nome_arquivo.setAlpha(1f);
+        btn_lixeira.setAlpha(1f);
+        btn_lixeira.setEnabled(true);
     }
     public void desativarBtns(){
         btnCenter.setEnabled(false);
@@ -193,6 +202,8 @@ public class Descriptografar extends BaseActivity {
         btnSelecionarArquivos.setEnabled(false);
         btnSelecionarArquivos.setAlpha(0.25f);
         tv_nome_arquivo.setAlpha(0.25f);
+        btn_lixeira.setAlpha(0.25f);
+        btn_lixeira.setEnabled(false);
     }
     public void descriptografia(){
         selecionarPasta(true, uri -> {
@@ -233,9 +244,18 @@ public class Descriptografar extends BaseActivity {
         @Override
         public void run() {
             if (arquivoSelecionado == null && btn_menu_mode == 0) btnCenter.setAlpha(0.65f);
-            else if (btn_menu_mode == 1) btnCenter.setAlpha(0.25f);
-            else if (btn_menu_mode == 0 && estado == 0) btnCenter.setAlpha(1f);
-
+            if (arquivoSelecionado == null){
+                btn_lixeira.setAlpha(0.25f);
+                btn_lixeira.setEnabled(false);
+                if(btn_menu_mode == 0) {
+                    btnCenter.setAlpha(0.65f);
+                    if(estado == 0) btnCenter.setAlpha(1f);
+                }
+                else if (btn_menu_mode == 1) btnCenter.setAlpha(0.25f);
+            } else {
+                btn_lixeira.setAlpha(1f);
+                btn_lixeira.setEnabled(true);
+            }
             handler.postDelayed(this, 16);
         }
     };

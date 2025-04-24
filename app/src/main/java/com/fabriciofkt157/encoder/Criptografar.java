@@ -2,6 +2,8 @@ package com.fabriciofkt157.encoder;
 
 import static android.widget.Toast.makeText;
 
+import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -19,20 +21,15 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.res.ResourcesCompat;
-import androidx.documentfile.provider.DocumentFile;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class Criptografar extends BaseActivity{
-    ImageButton btnAes128, btnAes192, btnAes256, btnCenter, btn_ok, btnSelecionarArquivos, btnSelecionarModo;
+    ImageButton btnAes128, btnAes192, btnAes256, btnCenter, btn_ok, btnSelecionarArquivos, btnSelecionarModo, btn_lixeira;
     FrameLayout senha;
     EditText edit_senha;
     TextView text_selecione_cripto, tv_nome_arquivo;
@@ -43,16 +40,21 @@ public class Criptografar extends BaseActivity{
     private String senhaUsuario;
 
     List<Uri> urisArquivosSelecionados = new ArrayList<>(), urisPastasSelecionadas = new ArrayList<>();
+    ActivityManager activityManager;
 
+    @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.criptografar);
         fn_op = 0;
 
+        activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+
         tv_nome_arquivo = findViewById(R.id.nome_arquivo);
         btnSelecionarArquivos = findViewById(R.id.btn_select_files);
         btnSelecionarModo = findViewById(R.id.selecionar_modo);
+        btn_lixeira = findViewById(R.id.lixeira);
 
         btnCenter = findViewById(R.id.btn_center);
         btn_ok = findViewById(R.id.btn_ok);
@@ -68,7 +70,7 @@ public class Criptografar extends BaseActivity{
 
         setupMenu();
         renderMenu(
-                new ImageButton[]{ btnSelecionarArquivos, btnSelecionarModo, btnCenter, btn_ok, btnAes128, btnAes192, btnAes256 },
+                new ImageButton[]{ btnSelecionarArquivos, btnSelecionarModo, btnCenter, btn_ok, btnAes128, btnAes192, btnAes256, btn_lixeira },
                 new TextView[]{ encoder, encoderM, text_selecione_cripto, tv_nome_arquivo },
                 new FrameLayout[]{ senha },
                 new EditText[]{ edit_senha }
@@ -139,6 +141,13 @@ public class Criptografar extends BaseActivity{
             }
         });
 
+        btn_lixeira.setOnClickListener(v -> {
+            urisArquivosSelecionados.clear();
+            urisPastasSelecionadas.clear();
+            tv_nome_arquivo.setText("nenhum arquivo carregado");
+            makeText(this, "Os arquivos selecionados foram removidos.", Toast.LENGTH_SHORT).show();
+        });
+
         if(!arquivos || nivelDeSeguranca == 0) btnCenter.setAlpha(0.7f);
         else btnCenter.setAlpha(1f);
         btnCenter.setOnClickListener(v -> {
@@ -207,6 +216,7 @@ public class Criptografar extends BaseActivity{
         btnAes192.setEnabled(true);
         btnAes256.setEnabled(true);
         btnSelecionarModo.setEnabled(true);
+        btn_lixeira.setEnabled(true);
 
         btnCenter.setAlpha(1f);
         btnSelecionarArquivos.setAlpha(1f);
@@ -216,6 +226,7 @@ public class Criptografar extends BaseActivity{
         btnSelecionarModo.setAlpha(1f);
         tv_nome_arquivo.setAlpha(1f);
         text_selecione_cripto.setAlpha(1f);
+        btn_lixeira.setAlpha(1f);
     }
     public void desativarBtns(){
         btnCenter.setEnabled(false);
@@ -224,6 +235,7 @@ public class Criptografar extends BaseActivity{
         btnAes192.setEnabled(false);
         btnAes256.setEnabled(false);
         btnSelecionarModo.setEnabled(false);
+        btn_lixeira.setEnabled(true);
 
         btnCenter.setAlpha(0.25f);
         btnSelecionarArquivos.setAlpha(0.25f);
@@ -233,58 +245,73 @@ public class Criptografar extends BaseActivity{
         btnSelecionarModo.setAlpha(0.25f);
         tv_nome_arquivo.setAlpha(0.25f);
         text_selecione_cripto.setAlpha(0.25f);
+        btn_lixeira.setAlpha(0.25f);
     }
-
-
-
-
+    @SuppressLint("SetTextI18n")
     public void criptografia(){
-        //ler dados
-        List<Map<String, byte[]>> listaDePastasArquivos = new ArrayList<>();
-        if(!urisPastasSelecionadas.isEmpty()){
-            for(Uri uri: urisPastasSelecionadas){
-                Map<String, byte[]> estruturaPasta = capturarEstruturaPasta(uri);
-                listaDePastasArquivos.add(estruturaPasta);
+        try {
+            //ler dados
+            List<Map<String, byte[]>> listaDePastasArquivos = new ArrayList<>();
+            if(!urisPastasSelecionadas.isEmpty()){
+                for(Uri uri: urisPastasSelecionadas){
+                    Map<String, byte[]> estruturaPasta = capturarEstruturaPasta(uri);
+                    listaDePastasArquivos.add(estruturaPasta);
+                }
             }
-        }
-        if(!urisArquivosSelecionados.isEmpty()){
-            Map<String, byte[]> arquivosIndividuais = new HashMap<>();
-            for(Uri uri : urisArquivosSelecionados){
-                String nome = "/" + nomeArquivoPorUri(uri);
-                byte[] dados = obterBytesDeUri(uri);
-                arquivosIndividuais.put(nome, dados);
+            if(!urisArquivosSelecionados.isEmpty()){
+                Map<String, byte[]> arquivosIndividuais = new HashMap<>();
+                for(Uri uri : urisArquivosSelecionados){
+                    String nome = "/" + nomeArquivoPorUri(uri);
+                    byte[] dados = obterBytesDeUri(uri);
+                    arquivosIndividuais.put(nome, dados);
+                }
+                listaDePastasArquivos.add(arquivosIndividuais);
             }
-            listaDePastasArquivos.add(arquivosIndividuais);
-        }
 
-        //captar a pasta destino e criptografar
+            //captar a pasta destino e criptografar
 
-        selecionarPasta(false, uri -> {
-            String nomeTemp = "temp" + System.currentTimeMillis();
-            Uri arquivoTemp = FileUtils.salvarArquivo(Criptografar.this, false, uri, nomeTemp, null);
-            Log.i("Lista de pastas e arquivos:", listaDePastasArquivos.toString());
-            FileUtils.salvarListaEmArquivo(Criptografar.this, arquivoTemp, listaDePastasArquivos);
+            selecionarPasta(false, uri -> {
+                String nomeTemp = "temp" + System.currentTimeMillis();
+                Uri arquivoTemp = FileUtils.salvarArquivo(Criptografar.this, false, uri, nomeTemp, null);
+                Log.i("Lista de pastas e arquivos:", listaDePastasArquivos.toString());
+                FileUtils.salvarListaEmArquivo(Criptografar.this, arquivoTemp, listaDePastasArquivos);
 
-            String nomeArquivoAes = "arquivos_criptografados_" + System.currentTimeMillis() + ".aes";
-            Uri uriArquivoAes = FileUtils.salvarArquivo(Criptografar.this, false, uri, nomeArquivoAes, null);
-            Crypt.criptografarArquivo(Criptografar.this, arquivoTemp, uriArquivoAes, chaveGerada);
+                String nomeArquivoAes = "arquivos_criptografados_" + System.currentTimeMillis() + ".aes";
+                Uri uriArquivoAes = FileUtils.salvarArquivo(Criptografar.this, false, uri, nomeArquivoAes, null);
+                Crypt.criptografarArquivo(Criptografar.this, arquivoTemp, uriArquivoAes, chaveGerada);
 
-            FileUtils.deleteFileFromUri(Criptografar.this, arquivoTemp);
+                FileUtils.deleteFileFromUri(Criptografar.this, arquivoTemp);
 
-            Map<String, byte[]> mapaDeChaves = FileUtils.carregarMap(this);
-            mapaDeChaves.put(nomeArquivoAes, chaveGerada);
-            FileUtils.salvarMap(this, mapaDeChaves);
-            makeText(Criptografar.this, "Os dados foram salvos em: " + uri + "/" + nomeArquivoAes, Toast.LENGTH_SHORT).show();
+                Map<String, byte[]> mapaDeChaves = FileUtils.carregarMap(this);
+                mapaDeChaves.put(nomeArquivoAes, chaveGerada);
+                FileUtils.salvarMap(this, mapaDeChaves);
+                makeText(Criptografar.this, "Os dados foram salvos em: " + uri + "/" + nomeArquivoAes, Toast.LENGTH_SHORT).show();
+                new AlertDialog.Builder(this)
+                        .setTitle("Chave AES")
+                        .setMessage("Salvamos a chave AES no armazenamento do aplicativo.\n\n" +
+                                "Observação: não altere o nome do arquivo, caso contrário, terá que inserir a chave manualmente.\n\n" +
+                                "Ainda estamos trabalhando num gerenciador de chaves ... aguarde :).")
+                        .setPositiveButton("Entendi", (dialog, which) -> dialog.dismiss())
+                        .show();
+            });
+            ativarBtns();
+            estado = 0;
+        } catch(OutOfMemoryError e) {
+            urisArquivosSelecionados.clear();
+            urisPastasSelecionadas.clear();
+            tv_nome_arquivo.setText("nenhum arquivo carregado");
             new AlertDialog.Builder(this)
-                    .setTitle("Chave AES")
-                    .setMessage("Salvamos a chave AES no armazenamento do aplicativo.\n\n" +
-                            "Observação: não altere o nome do arquivo, caso contrário, terá que inserir a chave manualmente.\n\n" +
-                            "Ainda estamos trabalhando num gerenciador de chaves ... aguarde :).")
-                    .setPositiveButton("Entendi", (dialog, which) -> dialog.dismiss())
+                    .setTitle("Erro: alocação de memória")
+                    .setMessage(
+                            "Seus arquivos são grandes demais para o processamento. \n" +
+                                    "Atualmente, o limite é " + activityManager.getLargeMemoryClass() + "MB. Estou trabalhando para contornar esse problema. \n" +
+                                    "A seleção de arquivos foi limpa. Tente um de cada vez, caso tenha selecionado mais de um arquivo.")
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .setNeutralButton("Ok", null)
                     .show();
-        });
-        ativarBtns();
-        estado = 0;
+            ativarBtns();
+        }
+
     }
 
     private AlertDialog.Builder getBuilder(FrameLayout senha, ImageButton btn_ok, EditText edit_senha) {
@@ -320,6 +347,14 @@ public class Criptografar extends BaseActivity{
             if ((!arquivos || nivelDeSeguranca == 0) && btn_menu_mode == 0) btnCenter.setAlpha(0.65f);
             else if (btn_menu_mode == 1 || estado == 1) btnCenter.setAlpha(0.25f);
             else if (btn_menu_mode == 0) btnCenter.setAlpha(1f);
+
+            if(!arquivos) {
+                btn_lixeira.setEnabled(false);
+                btn_lixeira.setAlpha(0.25f);
+            } else {
+                btn_lixeira.setAlpha(1f);
+                btn_lixeira.setEnabled(true);
+            }
 
             handler.postDelayed(this, 16);
         }

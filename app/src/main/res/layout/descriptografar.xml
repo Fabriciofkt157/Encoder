@@ -37,19 +37,25 @@
         android:layout_marginTop="37dp"
         tools:ignore="MissingConstraints" />
 
-    <TextView
-        android:id="@+id/nome_arquivo"
-        android:layout_width="355dp"
-        android:layout_height="37dp"
+    <ScrollView
+        android:layout_width="326dp"
+        android:layout_height="113dp"
         android:layout_marginTop="8dp"
-        android:fontFamily="@font/jersey10_regular"
-        android:text="*nenhum arquivo carregado"
-        android:textColor="@android:color/white"
-        android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.188"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btn_select_files" />
+        app:layout_constraintTop_toBottomOf="@id/btn_select_files"
+        tools:ignore="MissingConstraints,UselessParent">
 
+        <TextView
+            android:id="@+id/nome_arquivo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/jersey10_regular"
+            android:text="nenhum arquivo carregado"
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
+    </ScrollView>
 
     <ImageButton
         android:id="@+id/btn_center"
@@ -153,7 +159,7 @@
 
     <ImageButton
         android:id="@+id/btn_select_files"
-        android:layout_width="333dp"
+        android:layout_width="390dp"
         android:layout_height="48dp"
         android:layout_marginStart="10dp"
         android:layout_marginTop="28dp"
@@ -165,6 +171,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_encoder"
         app:layout_constraintVertical_bias="0.0" />
+    <ImageButton
+        android:id="@+id/lixeira"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="88dp"
+        android:layout_marginEnd="7dp"
+        android:background="@drawable/lixeira"
+        android:contentDescription="retorna a seleção de arquivos para a anterior"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.988"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_encoder" />
 
     <FrameLayout
         android:id="@+id/frame_selecionar_funcao"
@@ -245,8 +263,6 @@
             android:textSize="32sp"
             android:background="@color/background_cinza_claro"/>
     </FrameLayout>
-
-
 
     <ImageButton
         android:id="@+id/btn_menu"

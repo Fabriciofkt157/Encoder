@@ -3,6 +3,7 @@ package com.fabriciofkt157.encoder;
 import static android.widget.Toast.makeText;
 
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -43,6 +44,7 @@ public class BaseActivity extends AppCompatActivity {
     boolean menuAtivado = false;
     FrameLayout frame_selecionar_operacao;
     int btn_menu_mode = 0, op_modo, modo = 0, fn_op = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -186,10 +188,6 @@ public class BaseActivity extends AppCompatActivity {
         }
         nomesArquivos.append("Note que ainda é possível selecionar mais arquivos :)");
         tv_nome_arquivo.setText(nomesArquivos.toString());
-        if(uriArquivosSelecionados.size() + uriPastasSelecionadas.size() > 1 && fn_op == 0) {
-            makeText(this, "Você seleciou múltiplos arquivos,", Toast.LENGTH_LONG).show();
-            makeText(this, "eles serão compactados em apenas um que depois será criptografado.", Toast.LENGTH_SHORT).show();
-        }
     }
 
 

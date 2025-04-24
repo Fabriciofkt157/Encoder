@@ -8,6 +8,7 @@ import android.media.Image;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -58,7 +59,7 @@ public class Base64Tradutor extends BaseActivity{
                         tv_saida.setEnabled(true);
                         saida = Base64.getEncoder().encodeToString(entrada.getBytes(StandardCharsets.UTF_8));
                         String saidaFinal = saida;
-                        if (saida.length() > 15){
+                        if (saida.length() > 35){
                             saidaFinal = saida.substring(0, 35) + "...";
                         }
                         tv_saida.setText(saidaFinal);
@@ -67,13 +68,22 @@ public class Base64Tradutor extends BaseActivity{
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         if (entrada == null || entrada.trim().isEmpty()) {
                             tv_saida.setText("Entrada vazia ou inválida!");
-                        }
-                        try {
-                            byte[] decodedBytes = Base64.getDecoder().decode(entrada);
-                            tv_saida.setText(new String(decodedBytes, StandardCharsets.UTF_8));
-                        } catch (IllegalArgumentException e) {
-                            entrada = null;
-                            tv_saida.setText("Entrada inválida");
+                        } else {
+                            tv_saida.setEnabled(true);
+                            frame_saida.setAlpha(1f);
+                            try {
+                                byte[] decodedBytes = Base64.getDecoder().decode(entrada);
+                                tv_saida.setText(new String(decodedBytes, StandardCharsets.UTF_8));
+                                saida = (String) tv_saida.getText();
+                                String saidaFinal = saida;
+                                if (saida.length() > 35){
+                                    saidaFinal = saida.substring(0, 35) + "...";
+                                }
+                                tv_saida.setText(saidaFinal);
+                            } catch (IllegalArgumentException e) {
+                                entrada = null;
+                                tv_saida.setText("Entrada inválida");
+                            }
                         }
                     }
                 }
@@ -90,6 +100,7 @@ public class Base64Tradutor extends BaseActivity{
             else tela_entrada.setImageResource(R.drawable.base64_traduzir);
         });
         tv_saida.setOnClickListener(v -> {
+            Log.d("rodando", "sim");
             ClipboardManager clipboard = (ClipboardManager) this.getSystemService(Context.CLIPBOARD_SERVICE);
             ClipData clip = ClipData.newPlainText("Texto em Base64", saida);
             clipboard.setPrimaryClip(clip);
