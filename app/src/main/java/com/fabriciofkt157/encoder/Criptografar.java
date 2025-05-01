@@ -16,31 +16,37 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.Map;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.res.ResourcesCompat;
 
+import java.io.File;
+import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Criptografar extends BaseActivity{
     ImageButton btnAes128, btnAes192, btnAes256, btnCenter, btn_ok, btnSelecionarArquivos, btnSelecionarModo, btn_lixeira;
-    FrameLayout senha;
+    FrameLayout senha, frame_aguarde;
     EditText edit_senha;
     TextView text_selecione_cripto, tv_nome_arquivo;
     int nivelDeSeguranca = 0, estado = 0;
 
     byte[] chaveGerada;
-    private boolean arquivos = false;
+    private boolean arquivos = false, criptografando = false;
     private String senhaUsuario;
-
+    Uri pastaFinal, uriArquivoAes;
     List<Uri> urisArquivosSelecionados = new ArrayList<>(), urisPastasSelecionadas = new ArrayList<>();
     ActivityManager activityManager;
+    ProgressBar progressBar;
 
     @SuppressLint("SetTextI18n")
     @Override
@@ -60,6 +66,8 @@ public class Criptografar extends BaseActivity{
         btn_ok = findViewById(R.id.btn_ok);
         edit_senha = findViewById(R.id.edit_senha);
         senha = findViewById(R.id.frame_senha);
+        progressBar = findViewById(R.id.progressBar);
+        frame_aguarde = findViewById(R.id.frame_aguarde);
 
         btnAes128 = findViewById(R.id.btn_aes_128);
         btnAes192 = findViewById(R.id.btn_aes_192);
@@ -72,7 +80,7 @@ public class Criptografar extends BaseActivity{
         renderMenu(
                 new ImageButton[]{ btnSelecionarArquivos, btnSelecionarModo, btnCenter, btn_ok, btnAes128, btnAes192, btnAes256, btn_lixeira },
                 new TextView[]{ encoder, encoderM, text_selecione_cripto, tv_nome_arquivo },
-                new FrameLayout[]{ senha },
+                new FrameLayout[]{ senha, frame_aguarde },
                 new EditText[]{ edit_senha }
         );
 
@@ -148,12 +156,11 @@ public class Criptografar extends BaseActivity{
             makeText(this, "Os arquivos selecionados foram removidos.", Toast.LENGTH_SHORT).show();
         });
 
-        if(!arquivos || nivelDeSeguranca == 0) btnCenter.setAlpha(0.7f);
-        else btnCenter.setAlpha(1f);
         btnCenter.setOnClickListener(v -> {
             if(urisPastasSelecionadas.isEmpty() && urisArquivosSelecionados.isEmpty()) makeText(this, "Nenhum arquivo selecionado.", Toast.LENGTH_SHORT).show();
             else if(nivelDeSeguranca == 0) makeText(this, "Nenhum tipo de criptografia foi selecionado.", Toast.LENGTH_SHORT).show();
             else {
+                criptografando = true;
                 estado = 1;
                 botaoPressionado(btnCenter);
                 senha.setVisibility(View.VISIBLE);
@@ -173,9 +180,9 @@ public class Criptografar extends BaseActivity{
             if(!senhaUsuario.isEmpty()) {
                 senha.setVisibility(View.INVISIBLE);
                 btn_ok.setVisibility(View.INVISIBLE);
-
                 hideKeyboard(edit_senha);
                 edit_senha.setText("");
+
                 try {
                     chaveGerada = Crypt.gerarChaveAES(senhaUsuario, nivelDeSeguranca);
                     ClipboardManager clipboard = (ClipboardManager) this.getSystemService(Context.CLIPBOARD_SERVICE);
@@ -208,6 +215,78 @@ public class Criptografar extends BaseActivity{
             }
         });
     }
+
+    public void criptografia(){
+
+        File pastaTemp = new File(this.getFilesDir(), "temp");
+        File arquivoZip = new File(this.getFilesDir(), "arquivos.zip");
+        if(!arquivoZip.exists()){
+            try {
+                if(!arquivoZip.createNewFile()){
+                    Log.e("ERRO", "arquivo zip não pode ser criado.");
+                }
+            } catch (IOException e) {
+                Log.e("ERRO", String.valueOf(e));
+                throw new RuntimeException(e);
+            }
+        }
+
+        String nomeArquivoAes = "arquivos_criptografados_" + System.currentTimeMillis() + ".aes";
+        Uri uriArquivoZip = Uri.fromFile(arquivoZip);
+
+        selecionarPasta(false, uriPastaDestino -> {
+            pastaFinal = uriPastaDestino;
+            uriArquivoAes = FileUtils.salvarArquivo(Criptografar.this, false, pastaFinal, nomeArquivoAes, null);
+
+            progressBar.setVisibility(View.VISIBLE);
+            frame_aguarde.setVisibility(View.VISIBLE);
+            desativarBtns();
+            btnCenter.setEnabled(false);
+            btnCenter.setVisibility(View.INVISIBLE);
+
+            ExecutorService executor = Executors.newFixedThreadPool(1);
+            executor.execute(() -> {
+                try {
+                    Log.i("etapa", "copiando");
+                    ZipUtils.copiarParaInterno(urisPastasSelecionadas, urisArquivosSelecionados, Criptografar.this);
+                    Log.i("etapa", "zip");
+                    ZipUtils.zip(pastaTemp, arquivoZip);
+                    Log.i("tamanho arquivo zip", String.valueOf(arquivoZip.length()));
+                    Log.i("etapa", "criptografia");
+                    Crypt.criptografarArquivo(Criptografar.this, uriArquivoZip, uriArquivoAes, chaveGerada);
+
+                    runOnUiThread(() -> {
+                        if(!arquivoZip.delete()){
+                            Log.e("ERRO", "arquivo zip não pode ser deletado");
+                        }
+                        progressBar.setVisibility(View.GONE);
+                        frame_aguarde.setVisibility(View.INVISIBLE);
+                        Log.i("etapa", "UI");
+                        Toast.makeText(Criptografar.this, "Os dados foram salvos em: " + nomeArquivoAes, Toast.LENGTH_SHORT).show();
+                        Map<String, byte[]> mapaDeChaves = FileUtils.carregarMap(this);
+                        mapaDeChaves.put(nomeArquivoAes, chaveGerada);
+                        FileUtils.salvarMap(this, mapaDeChaves);
+                        new AlertDialog.Builder(Criptografar.this)
+                                .setTitle("Chave AES")
+                                .setMessage("Salvamos a chave AES no armazenamento do aplicativo.\n\n" +
+                                        "Observação: não altere o nome do arquivo, caso contrário, terá que inserir a chave manualmente.\n\n" +
+                                        "Ainda estamos trabalhando num gerenciador de chaves ... aguarde :).")
+                                .setPositiveButton("Entendi", (dialog, which) -> {
+                                    dialog.dismiss();
+                                    ativarBtns();
+                                    criptografando = false;
+                                    estado = 0;
+                                })
+                                .show();
+                    });
+                } catch (Exception e) {
+                    Log.e("ERRO_EXECUTOR", "Erro durante processo de criptografia", e);
+                    runOnUiThread(() -> Toast.makeText(Criptografar.this, "Erro ao criptografar: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                }
+            });
+        });
+    }
+
 
     public void ativarBtns(){
         btnCenter.setEnabled(true);
@@ -247,72 +326,6 @@ public class Criptografar extends BaseActivity{
         text_selecione_cripto.setAlpha(0.25f);
         btn_lixeira.setAlpha(0.25f);
     }
-    @SuppressLint("SetTextI18n")
-    public void criptografia(){
-        try {
-            //ler dados
-            List<Map<String, byte[]>> listaDePastasArquivos = new ArrayList<>();
-            if(!urisPastasSelecionadas.isEmpty()){
-                for(Uri uri: urisPastasSelecionadas){
-                    Map<String, byte[]> estruturaPasta = capturarEstruturaPasta(uri);
-                    listaDePastasArquivos.add(estruturaPasta);
-                }
-            }
-            if(!urisArquivosSelecionados.isEmpty()){
-                Map<String, byte[]> arquivosIndividuais = new HashMap<>();
-                for(Uri uri : urisArquivosSelecionados){
-                    String nome = "/" + nomeArquivoPorUri(uri);
-                    byte[] dados = obterBytesDeUri(uri);
-                    arquivosIndividuais.put(nome, dados);
-                }
-                listaDePastasArquivos.add(arquivosIndividuais);
-            }
-
-            //captar a pasta destino e criptografar
-
-            selecionarPasta(false, uri -> {
-                String nomeTemp = "temp" + System.currentTimeMillis();
-                Uri arquivoTemp = FileUtils.salvarArquivo(Criptografar.this, false, uri, nomeTemp, null);
-                Log.i("Lista de pastas e arquivos:", listaDePastasArquivos.toString());
-                FileUtils.salvarListaEmArquivo(Criptografar.this, arquivoTemp, listaDePastasArquivos);
-
-                String nomeArquivoAes = "arquivos_criptografados_" + System.currentTimeMillis() + ".aes";
-                Uri uriArquivoAes = FileUtils.salvarArquivo(Criptografar.this, false, uri, nomeArquivoAes, null);
-                Crypt.criptografarArquivo(Criptografar.this, arquivoTemp, uriArquivoAes, chaveGerada);
-
-                FileUtils.deleteFileFromUri(Criptografar.this, arquivoTemp);
-
-                Map<String, byte[]> mapaDeChaves = FileUtils.carregarMap(this);
-                mapaDeChaves.put(nomeArquivoAes, chaveGerada);
-                FileUtils.salvarMap(this, mapaDeChaves);
-                makeText(Criptografar.this, "Os dados foram salvos em: " + uri + "/" + nomeArquivoAes, Toast.LENGTH_SHORT).show();
-                new AlertDialog.Builder(this)
-                        .setTitle("Chave AES")
-                        .setMessage("Salvamos a chave AES no armazenamento do aplicativo.\n\n" +
-                                "Observação: não altere o nome do arquivo, caso contrário, terá que inserir a chave manualmente.\n\n" +
-                                "Ainda estamos trabalhando num gerenciador de chaves ... aguarde :).")
-                        .setPositiveButton("Entendi", (dialog, which) -> dialog.dismiss())
-                        .show();
-            });
-            ativarBtns();
-            estado = 0;
-        } catch(OutOfMemoryError e) {
-            urisArquivosSelecionados.clear();
-            urisPastasSelecionadas.clear();
-            tv_nome_arquivo.setText("nenhum arquivo carregado");
-            new AlertDialog.Builder(this)
-                    .setTitle("Erro: alocação de memória")
-                    .setMessage(
-                            "Seus arquivos são grandes demais para o processamento. \n" +
-                                    "Atualmente, o limite é " + activityManager.getLargeMemoryClass() + "MB. Estou trabalhando para contornar esse problema. \n" +
-                                    "A seleção de arquivos foi limpa. Tente um de cada vez, caso tenha selecionado mais de um arquivo.")
-                    .setIcon(android.R.drawable.ic_dialog_alert)
-                    .setNeutralButton("Ok", null)
-                    .show();
-            ativarBtns();
-        }
-
-    }
 
     private AlertDialog.Builder getBuilder(FrameLayout senha, ImageButton btn_ok, EditText edit_senha) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -348,7 +361,7 @@ public class Criptografar extends BaseActivity{
             else if (btn_menu_mode == 1 || estado == 1) btnCenter.setAlpha(0.25f);
             else if (btn_menu_mode == 0) btnCenter.setAlpha(1f);
 
-            if(!arquivos) {
+            if(!arquivos || criptografando) {
                 btn_lixeira.setEnabled(false);
                 btn_lixeira.setAlpha(0.25f);
             } else {

@@ -12,20 +12,28 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import static android.widget.Toast.makeText;
 
+import androidx.documentfile.provider.DocumentFile;
+
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Descriptografar extends BaseActivity {
     ImageButton btnCenter, btn_ok_senha, btn_ok_chave, btnSelecionarArquivos, btn_lixeira;
-    FrameLayout senha, chave;
+    FrameLayout senha, chave, frame_aguarde;
     TextView tv_nome_arquivo;
     EditText edit_senha, edit_chave;
     Uri arquivoSelecionado, pastaDestino;
     int estado = 0;
+    ProgressBar progressBar;
+    boolean descriptografando = false;
 
     byte[] chaveAES;
     String nomeArquivoCarregado, chaveInserida;
@@ -46,6 +54,8 @@ public class Descriptografar extends BaseActivity {
         tv_nome_arquivo = findViewById(R.id.nome_arquivo);
         btnSelecionarArquivos = findViewById(R.id.btn_select_files);
         btn_lixeira = findViewById(R.id.lixeira);
+        frame_aguarde = findViewById(R.id.frame_aguarde);
+        progressBar = findViewById(R.id.progressBar);
         setupMenu();
         renderMenu(
                 new ImageButton[]{ btnSelecionarArquivos, btnCenter, btn_ok_senha, btn_ok_chave, btn_lixeira },
@@ -76,6 +86,7 @@ public class Descriptografar extends BaseActivity {
             botaoPressionado(btnSelecionarArquivos);
             if(arquivoSelecionado == null) makeText(this, "Selecione um arquivo primeiro.", Toast.LENGTH_SHORT).show();
             else {
+                descriptografando = true;
                 estado = 1;
                 boolean arquivoReconhecido = false;
                 Map<String, byte[]> dadosSalvos = FileUtils.carregarMap(this);
@@ -206,9 +217,13 @@ public class Descriptografar extends BaseActivity {
         btn_lixeira.setEnabled(false);
     }
     public void descriptografia(){
+
+        progressBar.setVisibility(View.VISIBLE);
+        frame_aguarde.setVisibility(View.VISIBLE);
+        desativarBtns();
         selecionarPasta(true, uri -> {
             pastaDestino = uri;
-            Uri arquivoTemp = FileUtils.salvarArquivo(this, false, uri, "temp_" + System.currentTimeMillis(), null);
+            Uri arquivoTemp = FileUtils.salvarArquivo(this, false, uri, "temp_" + System.currentTimeMillis() + ".zip", null);
             if(Crypt.descriptografarArquivo(this, arquivoSelecionado, arquivoTemp, chaveAES)){
                 descompilar(arquivoTemp);
             } else {
@@ -224,9 +239,34 @@ public class Descriptografar extends BaseActivity {
 
     public void descompilar(Uri arquivoTemp){
         if(FileUtils.temPermissaoParaEscrever(this, pastaDestino)){
-            Uri pastaFinal = FileUtils.criarPasta(this, pastaDestino, "arquivos_descriptografados");
-            Log.i("pasta final:", String.valueOf(pastaFinal));
-            FileUtils.restaurarArquivosDeMapa(this, arquivoTemp, pastaFinal);
+            DocumentFile pasta = DocumentFile.fromTreeUri(this, pastaDestino);
+            DocumentFile arquivoZip = DocumentFile.fromSingleUri(this, arquivoTemp);
+            ZipUtils.unzip(this, arquivoZip, pasta);
+
+            progressBar.setVisibility(View.VISIBLE);
+            frame_aguarde.setVisibility(View.VISIBLE);
+
+            ExecutorService executor = Executors.newFixedThreadPool(1);
+            executor.execute(() -> {
+                try {
+                    ZipUtils.unzip(Descriptografar.this, arquivoZip, pasta);
+                    runOnUiThread(() -> {
+                        DocumentFile pastaTemp = Objects.requireNonNull(pasta).findFile("temp");
+                        if (pastaTemp != null && pastaTemp.isDirectory()) {
+                            pastaTemp.renameTo("arquivos descriptografados");
+                        }
+                        progressBar.setVisibility(View.GONE);
+                        frame_aguarde.setVisibility(View.INVISIBLE);
+                        ativarBtns();
+                        descriptografando = false;
+                        Toast.makeText(Descriptografar.this, "Arquivo descriptografado com sucesso!", Toast.LENGTH_SHORT).show();
+                    });
+                } catch (Exception e) {
+                    Log.e("ERRO_EXECUTOR", "Erro durante processo de descriptografia", e);
+                    runOnUiThread(() -> Toast.makeText(Descriptografar.this, "Erro ao descriptografar: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                }
+            });
+
         } else makeText(this, "Sem permissão de escrita para a pasta destino", Toast.LENGTH_SHORT).show();
         FileUtils.deleteFileFromUri(this, arquivoTemp);
 
@@ -244,17 +284,19 @@ public class Descriptografar extends BaseActivity {
         @Override
         public void run() {
             if (arquivoSelecionado == null && btn_menu_mode == 0) btnCenter.setAlpha(0.65f);
-            if (arquivoSelecionado == null){
+            if (arquivoSelecionado == null || descriptografando){
                 btn_lixeira.setAlpha(0.25f);
                 btn_lixeira.setEnabled(false);
+            } else {
+                btn_lixeira.setAlpha(1f);
+                btn_lixeira.setEnabled(true);
+            }
+            if (arquivoSelecionado == null){
                 if(btn_menu_mode == 0) {
                     btnCenter.setAlpha(0.65f);
                     if(estado == 0) btnCenter.setAlpha(1f);
                 }
                 else if (btn_menu_mode == 1) btnCenter.setAlpha(0.25f);
-            } else {
-                btn_lixeira.setAlpha(1f);
-                btn_lixeira.setEnabled(true);
             }
             handler.postDelayed(this, 16);
         }

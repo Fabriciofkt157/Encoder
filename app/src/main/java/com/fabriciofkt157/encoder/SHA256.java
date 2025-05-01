@@ -10,29 +10,39 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public class SHA256 extends BaseActivity{
     ImageButton btnCenter, btnSelecionarArquivos, btnSelecionarModo, btn_ok, btn_copiar, btn_lixeira;
     TextView tv_nome_arquivo;
-    FrameLayout frame_hash;
+    FrameLayout frame_hash, frame_aguarde;
+    ProgressBar progressBar;
     List<Uri> urisArquivosSelecionados = new ArrayList<>(), urisPastasSelecionadas = new ArrayList<>();
     Map<String, String> mapsHash256 = new HashMap<>();
     TextView tv_hash;
-    boolean arquivos = false;
+    boolean arquivos = false, calculando = false;
+    StringBuilder hashes;
     ActivityManager activityManager;
     @SuppressLint("SetTextI18n")
     @Override
@@ -51,12 +61,14 @@ public class SHA256 extends BaseActivity{
         btn_ok = findViewById(R.id.btn_ok);
         btn_copiar = findViewById(R.id.btn_copiar);
         btn_lixeira = findViewById(R.id.lixeira);
+        frame_aguarde = findViewById(R.id.frame_aguarde);
+        progressBar = findViewById(R.id.progressBar);
 
         setupMenu();
         renderMenu(
                 new ImageButton[]{ btnSelecionarArquivos, btnSelecionarModo, btnCenter, btn_ok, btn_lixeira },
                 new TextView[]{ encoder, encoderM, tv_nome_arquivo },
-                new FrameLayout[]{ frame_hash },
+                new FrameLayout[]{ frame_hash, frame_aguarde },
                 null
         );
         btnSelecionarArquivos.setOnClickListener(v -> {
@@ -92,9 +104,30 @@ public class SHA256 extends BaseActivity{
         else btnCenter.setAlpha(1f);
         btnCenter.setOnClickListener(v -> {
             botaoPressionado(btnCenter);
-            gerarSHA();
-        });
+            frame_aguarde.setVisibility(View.VISIBLE);
+            progressBar.setVisibility(View.VISIBLE);
+            ExecutorService executor = Executors.newFixedThreadPool(1);
+            executor.execute(() -> {
+                gerarSHA();
+                runOnUiThread(() -> {
+                    frame_aguarde.setVisibility(View.INVISIBLE);
+                    progressBar.setVisibility(View.GONE);
+                    tv_hash.setText(hashes.toString());
+                    btnCenter.setVisibility(View.INVISIBLE);
+                    btn_ok.setVisibility(View.VISIBLE);
+                    btnSelecionarArquivos.setEnabled(false);
+                    btnSelecionarArquivos.setAlpha(0.25f);
+                    btnSelecionarModo.setEnabled(false);
+                    btnSelecionarModo.setAlpha(0.25f);
+                    btn_lixeira.setEnabled(false);
+                    btn_lixeira.setAlpha(0.25f);
+                    frame_hash.setVisibility(View.VISIBLE);
+                    tv_nome_arquivo.setAlpha(0.25f);
+                    calculando = false;
+                });
+            });
 
+        });
         btn_lixeira.setOnClickListener(v -> {
             arquivos = false;
             urisArquivosSelecionados.clear();
@@ -113,6 +146,7 @@ public class SHA256 extends BaseActivity{
             btn_lixeira.setEnabled(true);
             btn_lixeira.setAlpha(1f);
             frame_hash.setVisibility(View.INVISIBLE);
+            tv_nome_arquivo.setAlpha(1f);
             mapsHash256 = new HashMap<>();
         });
         btn_copiar.setOnClickListener(v -> {
@@ -126,38 +160,30 @@ public class SHA256 extends BaseActivity{
 
     @SuppressLint("SetTextI18n")
     public void gerarSHA(){
+        calculando = true;
         try{
-            Map<String, byte[]> caminho_dados = new HashMap<>();
+            Map<String, Uri> caminho_dados = new HashMap<>();
             for(Uri uri : urisArquivosSelecionados){
-                caminho_dados.put(nomeArquivoPorUri(uri), obterBytesDeUri(uri));
+                caminho_dados.put(nomeArquivoPorUri(uri), uri);
             }
             for(Uri uri : urisPastasSelecionadas){
                 caminho_dados.putAll(capturarEstruturaPasta(uri));
             }
-            for(Map.Entry<String, byte[]> entry : caminho_dados.entrySet()){
+            for(Map.Entry<String, Uri> entry : caminho_dados.entrySet()){
                 String caminho = entry.getKey();
-                byte[] dados = entry.getValue();
-                try {
-                    mapsHash256.put(caminho, calcularSHA256(dados));
-                } catch (NoSuchAlgorithmException e) {
-                    throw new RuntimeException(e);
+                Uri uri = entry.getValue();
+                try (InputStream is = getContentResolver().openInputStream(uri)) {
+                    String hash = calcularSHA256(Objects.requireNonNull(is));
+                    mapsHash256.put(caminho, hash);
+                } catch (Exception e) {
+                    Log.e("SHA", "Erro ao calcular SHA de " + caminho, e);
                 }
             }
-            StringBuilder hashes = new StringBuilder();
+            hashes = new StringBuilder();
 
             for (Map.Entry<String, String> entry : mapsHash256.entrySet()) {
                 hashes.append(entry.getKey()).append(":\n\n").append(entry.getValue()).append("\n\n");
             }
-            tv_hash.setText(hashes.toString());
-            btnCenter.setVisibility(View.INVISIBLE);
-            btn_ok.setVisibility(View.VISIBLE);
-            btnSelecionarArquivos.setEnabled(false);
-            btnSelecionarArquivos.setAlpha(0.25f);
-            btnSelecionarModo.setEnabled(false);
-            btnSelecionarModo.setAlpha(0.25f);
-            btn_lixeira.setEnabled(false);
-            btn_lixeira.setAlpha(0.25f);
-            frame_hash.setVisibility(View.VISIBLE);
         } catch (OutOfMemoryError e){
             urisArquivosSelecionados.clear();
             urisPastasSelecionadas.clear();
@@ -171,18 +197,19 @@ public class SHA256 extends BaseActivity{
                     .setIcon(android.R.drawable.ic_dialog_alert)
                     .setNeutralButton("Ok", null)
                     .show();
+            calculando = false;
+        }
+    }
+    public String calcularSHA256(InputStream inputStream) throws NoSuchAlgorithmException, IOException {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] buffer = new byte[8192];
+        int bytesRead;
+
+        while ((bytesRead = inputStream.read(buffer)) != -1) {
+            digest.update(buffer, 0, bytesRead);
         }
 
-
-    }
-
-
-    public String calcularSHA256(byte[] data) throws NoSuchAlgorithmException {
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        digest.update(data);
-
         byte[] hashBytes = digest.digest();
-
         StringBuilder hexString = new StringBuilder();
         for (byte b : hashBytes) {
             hexString.append(String.format("%02x", b));
@@ -196,7 +223,7 @@ public class SHA256 extends BaseActivity{
         @Override
         public void run() {
             System.out.println(arquivos);
-            if (!arquivos) {
+            if (!arquivos || calculando) {
                 btn_lixeira.setAlpha(0.25f);
                 btn_lixeira.setEnabled(false);
 

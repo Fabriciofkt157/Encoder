@@ -19,9 +19,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -29,33 +27,12 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class FileUtils {
-
-    /*public static File getFileFromUri(Context context, Uri uri, Uri pastaDestino) throws IOException {
-        InputStream inputStream = context.getContentResolver().openInputStream(uri);
-        String fileName = "temp_" + System.currentTimeMillis();
-
-        File tempFile = new File(Objects.requireNonNull(context.getContentResolver().openFileDescriptor(pastaDestino, "rw")).getFileDescriptor().toString(), fileName);
-
-        FileOutputStream outputStream = new FileOutputStream(tempFile);
-        byte[] buffer = new byte[4096];
-        int bytesRead;
-        while ((bytesRead = Objects.requireNonNull(inputStream).read(buffer)) != -1) {
-            outputStream.write(buffer, 0, bytesRead);
-        }
-
-        inputStream.close();
-        outputStream.close();
-
-        return tempFile;
-    }*/
-
-
     public static Uri salvarArquivo(Context context, boolean descompilar, Uri uriPasta, String nomeArquivo, byte[] dados) {
         try {
             // Cria o documento dentro da pasta selecionada
-
             Uri uriDiretorio;
             if(!descompilar) {
                 uriDiretorio = DocumentsContract.buildDocumentUriUsingTree(uriPasta,
@@ -63,8 +40,6 @@ public class FileUtils {
             } else {
                 uriDiretorio = uriPasta;
             }
-
-
 
             Uri arquivoUri = DocumentsContract.createDocument(
                     context.getContentResolver(),
@@ -100,7 +75,7 @@ public class FileUtils {
             Uri uriExistente = verificarPastaExistente(context, uriDiretorio, nomePasta);
             if (uriExistente != null) {
                 // A pasta já existe, retornar o URI dela
-                Log.d("CriarPasta", "Pasta já existe: " + uriExistente.toString());
+                Log.d("CriarPasta", "Pasta já existe: " + uriExistente);
                 return uriExistente;
             }
 
@@ -113,7 +88,7 @@ public class FileUtils {
             );
 
             if (uriNovaPasta != null) {
-                Log.d("CriarPasta", "Pasta criada com sucesso: " + uriNovaPasta.toString());
+                Log.d("CriarPasta", "Pasta criada com sucesso: " + uriNovaPasta);
             } else {
                 Log.e("CriarPasta", "Falha ao criar a pasta: " + nomePasta);
             }
@@ -193,56 +168,6 @@ public class FileUtils {
         }
     }
 
-    public static void restaurarArquivosDeMapa(Context context, Uri uriArquivoSalvo, Uri uriDestino) {
-        try {
-            // Abrir o arquivo salvo para leitura
-            InputStream inputStream = context.getContentResolver().openInputStream(uriArquivoSalvo);
-            if (inputStream == null) {
-                throw new IOException("Não foi possível abrir InputStream para o Uri fornecido.");
-            }
-
-            // Desserializar a lista de mapas
-            ObjectInputStream ois = new ObjectInputStream(inputStream);
-
-            List<Map<String, byte[]>> listaDePastasArquivos = (List<Map<String, byte[]>>) ois.readObject();
-            //Log.i("Lista pastas de arquivos: ", listaDePastasArquivos.toString());
-            ois.close();
-            inputStream.close();
-
-            // Iterar sobre os mapas e recriar a estrutura de arquivos e pastas
-            for (Map<String, byte[]> estruturaPasta : listaDePastasArquivos) {
-                for (Map.Entry<String, byte[]> entrada : estruturaPasta.entrySet()) {
-                    String caminhoRelativo = entrada.getKey();
-                    byte[] dados = entrada.getValue();
-
-                    // Separar diretórios e nome do arquivo
-                    int indexUltimaBarra = caminhoRelativo.lastIndexOf("/");
-                    String caminhoDiretorio = indexUltimaBarra > 0 ? caminhoRelativo.substring(0, indexUltimaBarra) : "";
-                    String nomeArquivo = caminhoRelativo.substring(indexUltimaBarra + 1);
-
-                    // Criar diretórios se necessário
-                    Uri uriPastaAtual = uriDestino;
-
-                    if (!caminhoDiretorio.isEmpty()) {
-                        uriPastaAtual = criarEstruturaDePastas(context, uriDestino, caminhoDiretorio);
-                    }
-
-                    // Criar o arquivo na pasta correta
-                    Uri arquivoCriado = salvarArquivo(context, true, uriPastaAtual, nomeArquivo, dados);
-
-
-                    if (arquivoCriado != null) {
-                        Log.d("RestaurarArquivo", "Arquivo restaurado: " + arquivoCriado.toString());
-                    } else {
-                        Log.e("RestaurarArquivo", "Falha ao restaurar arquivo: " + nomeArquivo);
-                    }
-                }
-            }
-        } catch (IOException | ClassNotFoundException e) {
-            Log.e("RestaurarArquivo", "Erro ao restaurar arquivos", e);
-        }
-    }
-
     public static Uri criarEstruturaDePastas(Context context, Uri uriRaiz, String caminho) throws FileNotFoundException {
         String[] pastas = caminho.split("/");
         Log.i("pastas", Arrays.toString(pastas));
@@ -298,9 +223,6 @@ public class FileUtils {
             Log.e("DELETE_FILE", "Erro ao deletar arquivo: " + fileUri, e);
         }
     }
-
-
-    private static final String FILE_NAME = "uri_armazenado.txt";
 
     //salvar o mapa no arquivo
     public static void salvarMap(Context context, Map<String, byte[]> mapaDeChavesSalvas) {
@@ -362,8 +284,18 @@ public class FileUtils {
             return mapGerado;
         }
     }
-
-
+    public static void limparTemp(Context context){
+        File pastaTemp = new File(context.getFilesDir(), "temp");
+        limparRecursivamente(context, pastaTemp);
+    }
+    public static void limparRecursivamente(Context context, File arquivo_pasta){
+        if(arquivo_pasta.isDirectory()){
+            for(File pastaFilha : Objects.requireNonNull(arquivo_pasta.listFiles())){
+                limparRecursivamente(context, pastaFilha);
+            }
+        }
+        arquivo_pasta.delete();
+    }
 
     // Converter byte[] para String hexadecimal
     public static String bytesToHex(byte[] bytes) {

@@ -1,9 +1,6 @@
 package com.fabriciofkt157.encoder;
 
-import static android.widget.Toast.makeText;
-
 import android.annotation.SuppressLint;
-import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -11,7 +8,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
 import android.provider.OpenableColumns;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -19,7 +15,6 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -28,9 +23,6 @@ import androidx.core.content.ContextCompat;
 import androidx.documentfile.provider.DocumentFile;
 
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -215,23 +207,6 @@ public class BaseActivity extends AppCompatActivity {
         return nomePasta;
     }
 
-    public byte[] obterBytesDeUri(Uri fileUri) {
-        try (InputStream inputStream = getContentResolver().openInputStream(fileUri);
-             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-
-            byte[] buffer = new byte[1024*1024*10];
-            int bytesRead;
-
-            while ((bytesRead = Objects.requireNonNull(inputStream).read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
-            }
-            return outputStream.toByteArray();
-        } catch (IOException e) {
-            Log.e("ErroLeitura", "Erro ao ler arquivo: " + fileUri, e);
-            return null;
-        }
-    }
-
     private OnArquivosSelecionadosListener callbackSelecionarUriArquivos;
     public void selecionarArquivos(OnArquivosSelecionadosListener callback) {
         this.callbackSelecionarUriArquivos = callback;
@@ -314,8 +289,8 @@ public class BaseActivity extends AppCompatActivity {
         void onPastaSelecionada(Uri uri);
     }
 
-    public Map<String, byte[]> capturarEstruturaPasta(Uri pastaUri) {
-        Map<String, byte[]> arquivosMap = new HashMap<>();
+    public Map<String, Uri> capturarEstruturaPasta(Uri pastaUri) {
+        Map<String, Uri> arquivosMap = new HashMap<>();
         DocumentFile pasta = DocumentFile.fromTreeUri(this, pastaUri);
 
         if (pasta != null && pasta.isDirectory()) {
@@ -324,34 +299,15 @@ public class BaseActivity extends AppCompatActivity {
         return arquivosMap;
     }
 
-    private void capturarArquivosRecursivamente(DocumentFile pasta, String caminhoAtual, Map<String, byte[]> arquivosMap) {
-        for (DocumentFile file : pasta.listFiles()) {
-            String caminho = caminhoAtual + "/" + file.getName();
+    private void capturarArquivosRecursivamente(DocumentFile pastaAtual, String caminhoRelativo, Map<String, Uri> arquivosMap) {
+        for (DocumentFile file : pastaAtual.listFiles()) {
+            String nomeAtual = caminhoRelativo.isEmpty() ? file.getName() : caminhoRelativo + "/" + file.getName();
 
             if (file.isDirectory()) {
-                Log.d("Pasta", "📁 " + caminho);
-                capturarArquivosRecursivamente(file, caminho, arquivosMap);
-            } else {
-                Log.d("Arquivo", "📄 " + caminho);
-                arquivosMap.put(caminho, lerArquivoParaBytes(file.getUri()));
+                capturarArquivosRecursivamente(file, nomeAtual, arquivosMap);
+            } else if (file.isFile()) {
+                arquivosMap.put(nomeAtual, file.getUri());
             }
-        }
-    }
-
-    private byte[] lerArquivoParaBytes(Uri fileUri) {
-        try (InputStream inputStream = getContentResolver().openInputStream(fileUri);
-             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-
-            byte[] buffer = new byte[4096];
-            int bytesRead;
-
-            while ((bytesRead = Objects.requireNonNull(inputStream).read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
-            }
-            return outputStream.toByteArray();
-        } catch (IOException e) {
-            Log.e("ErroLeitura", "Erro ao ler arquivo: " + fileUri, e);
-            return null;
         }
     }
 

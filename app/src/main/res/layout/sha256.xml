@@ -152,6 +152,34 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"/>
     </FrameLayout>
+    <FrameLayout
+        android:id="@+id/frame_aguarde"
+        android:layout_width="328dp"
+        android:layout_height="181dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/tv_encoder">
+
+        <ImageView
+            android:id="@+id/aguarde"
+            android:layout_width="wrap_content"
+            android:layout_height="182dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/aguarde" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Large"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminate="true"
+            android:indeterminateTint="@color/cinza"
+            android:visibility="visible" />
+
+    </FrameLayout>
 
     <ImageButton
         android:id="@+id/btn_ok"

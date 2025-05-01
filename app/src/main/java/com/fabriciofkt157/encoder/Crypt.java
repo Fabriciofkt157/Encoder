@@ -4,7 +4,6 @@ import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.MessageDigest;
@@ -21,7 +20,7 @@ import javax.crypto.spec.SecretKeySpec;
 public class Crypt {
     private static final String AES_TRANSFORMATION = "AES/CBC/PKCS5Padding";
 
-    public static void criptografarArquivo(Context context, Uri uriEntrada, Uri uriSaida, byte[] chaveAES) {
+    public static void criptografarArquivo(Context context, Uri uriEntrada, Uri uriSaida, byte[] chaveAES){
         try (
                 InputStream fis = context.getContentResolver().openInputStream(uriEntrada);
                 OutputStream fos = context.getContentResolver().openOutputStream(uriSaida)
