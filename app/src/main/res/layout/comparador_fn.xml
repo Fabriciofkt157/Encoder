@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background">
+
+
+    <TextView
+        android:id="@+id/tv_encoder"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/jersey10_regular"
+        android:text="Encoder"
+        android:textColor="@android:color/white"
+        android:textSize="64sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.044"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteY="0dp"
+        tools:ignore="MissingConstraints" />
+    <TextView
+        android:id="@+id/tv_encoder_modo"
+        android:layout_width="109dp"
+        android:layout_height="18dp"
+        android:layout_marginStart="200dp"
+        android:fontFamily="@font/jersey10_regular"
+        android:text="Comparador"
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.044"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="37dp"
+        tools:ignore="MissingConstraints" />
+
+    <TextView
+        android:id="@+id/text_selecione_fn"
+        android:layout_width="344dp"
+        android:layout_height="74dp"
+        android:layout_marginTop="100dp"
+        android:fontFamily="@font/jersey10_regular"
+        android:text="SELECIONE A FUNÇÃO DO SEU DISPOSITIVO"
+        android:textColor="@android:color/white"
+        android:textSize="36sp"
+        android:visibility="visible"
+        app:layout_constraintTop_toTopOf="@id/tv_encoder"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <TextView
+        android:id="@+id/text_aguardando_outro"
+        android:layout_width="377dp"
+        android:layout_height="95dp"
+        android:layout_marginTop="100dp"
+        android:fontFamily="@font/jersey10_regular"
+        android:text="AGUARDANDO A SELEÇÃO DE ARQUIVOS NO OUTRO DISPOSITIVO"
+        android:textColor="@android:color/white"
+        android:textSize="36sp"
+        android:visibility="invisible"
+        app:layout_constraintTop_toTopOf="@id/tv_encoder"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent" />
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Large"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:indeterminate="true"
+        android:indeterminateTint="@color/cinza_azulado_claro"
+        android:visibility="invisible"
+        tools:ignore="MissingConstraints" />
+
+    <ImageButton
+        android:id="@+id/btn_host"
+        android:layout_width="300dp"
+        android:layout_height="40dp"
+        android:background="@drawable/host"
+        android:contentDescription="host"
+        android:layout_marginTop="100dp"
+        app:layout_constraintTop_toTopOf="@id/text_selecione_fn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:visibility="visible" />
+
+    <ImageButton
+        android:id="@+id/btn_receptor"
+        android:layout_width="300dp"
+        android:layout_height="40dp"
+        android:background="@drawable/receptor"
+        android:contentDescription="host"
+        android:layout_marginTop="80dp"
+        app:layout_constraintTop_toTopOf="@id/btn_host"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:visibility="visible" />
+
+    <TextView
+        android:id="@+id/text_host_info"
+        android:layout_width="366dp"
+        android:layout_height="51dp"
+        android:layout_marginTop="104dp"
+        android:fontFamily="@font/jersey10_regular"
+        android:text="HOST: aquele que contém os arquivos originais — os arquivos serão comparados a partir desse aqui."
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/btn_receptor" />
+
+    <TextView
+        android:id="@+id/text_recpetor_info"
+        android:layout_width="366dp"
+        android:layout_height="51dp"
+        android:layout_marginTop="48dp"
+        android:fontFamily="@font/jersey10_regular"
+        android:text="RECEPTOR: aquele que se conectará ao host e possui os arquivos possivelmente duvidosos."
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/text_host_info" />
+
+    <FrameLayout
+        android:id="@+id/frame_conectar_host"
+        android:layout_width="333dp"
+        android:layout_height="333dp"
+        android:layout_marginBottom="250dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/tv_encoder"
+        app:layout_constraintVertical_bias="1">
+
+        <ImageView
+            android:id="@+id/host_back"
+            android:layout_width="333dp"
+            android:layout_height="333dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/host_conectar" />
+
+        <TextView
+            android:id="@+id/text_ip"
+            android:layout_width="190dp"
+            android:layout_height="26dp"
+            android:layout_gravity="start"
+            android:layout_marginTop="82dp"
+            android:layout_marginStart="65dp"
+            android:background="@android:color/transparent"
+            android:text="Erro ao obter o IP"
+            android:textColor="@color/cinza"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/text_porta"
+            android:layout_width="190dp"
+            android:layout_height="26dp"
+            android:layout_gravity="start"
+            android:layout_marginTop="118dp"
+            android:layout_marginStart="125dp"
+            android:background="@android:color/transparent"
+            android:text="5000"
+            android:textColor="@color/cinza"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/text_aguardando"
+            android:layout_width="248dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_marginStart="50dp"
+            android:layout_marginBottom="30dp"
+            android:background="@android:color/transparent"
+            android:text="AGUARDANDO CONEXÃO"
+            android:textColor="@color/cinza"
+            android:textSize="20sp" />
+
+    </FrameLayout>
+    <FrameLayout
+        android:id="@+id/frame_conectar_receptor"
+        android:layout_width="333dp"
+        android:layout_height="333dp"
+        android:layout_marginBottom="250dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/tv_encoder"
+        app:layout_constraintVertical_bias="0.99">
+
+        <ImageView
+            android:id="@+id/receptor_back"
+            android:layout_width="333dp"
+            android:layout_height="333dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/receptor_conectar"/>
+        <EditText
+            android:id="@+id/edit_ip"
+            android:layout_width="190dp"
+            android:layout_height="26dp"
+            android:layout_gravity="start"
+            android:layout_marginTop="82dp"
+            android:layout_marginStart="65dp"
+            android:background="@android:color/transparent"
+            android:cursorVisible="true"
+            android:hint="Digite algo aqui"
+            android:inputType="text"
+            android:textColor="@color/cinza"
+            android:textSize="20sp" />
+        <EditText
+            android:id="@+id/edit_porta"
+            android:layout_width="190dp"
+            android:layout_height="26dp"
+            android:layout_gravity="start"
+            android:layout_marginTop="115dp"
+            android:layout_marginStart="125dp"
+            android:background="@android:color/transparent"
+            android:cursorVisible="true"
+            android:hint="Digite algo aqui"
+            android:inputType="text"
+            android:textColor="@color/cinza"
+            android:textSize="20sp" />
+
+    </FrameLayout>
+
+    <ImageView
+        android:id="@+id/resultado"
+        android:layout_width="329dp"
+        android:layout_height="172dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/reprovado"
+        tools:ignore="MissingConstraints"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <ImageButton
+        android:id="@+id/btn_ok"
+        android:layout_width="333dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/ok"
+        android:contentDescription="voltar a tela anterior"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/frame_conectar_receptor"/>
+
+    <FrameLayout
+        android:id="@+id/frame_selecionar_funcao"
+        android:layout_width="256dp"
+        android:layout_height="549dp"
+        android:background="@drawable/fundo_selecionar_operacao"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tv_info_menu"
+            android:layout_width="184dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="10dp"
+            android:fontFamily="@font/jersey10_regular"
+            android:text="selecione a operação que deseja realizar:"
+            android:textColor="@color/roxo_escuro"
+            android:textSize="24sp"
+            android:background="@color/background_cinza_claro"/>
+
+        <TextView
+            android:id="@+id/btn_selecionar_criptografar"
+            android:layout_width="244dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="100dp"
+            android:fontFamily="@font/jersey10_regular"
+            android:text=" criptografar"
+            android:textColor="@color/cinza_background"
+            android:textSize="32sp"
+            android:background="@color/background_cinza_claro"/>
+
+        <TextView
+            android:id="@+id/btn_selecionar_descriptografar"
+            android:layout_width="243dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="140dp"
+            android:fontFamily="@font/jersey10_regular"
+            android:text=" descriptografar"
+            android:textColor="@color/cinza_background"
+            android:textSize="32sp"
+            android:background="@color/background_cinza_claro"/>
+
+        <TextView
+            android:id="@+id/btn_selecionar_base64"
+            android:layout_width="244dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="180dp"
+            android:fontFamily="@font/jersey10_regular"
+            android:text=" Base64"
+            android:textColor="@color/cinza_background"
+            android:textSize="32sp"
+            android:background="@color/background_cinza_claro"/>
+        <TextView
+            android:id="@+id/btn_selecionar_sha256"
+            android:layout_width="244dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="220dp"
+            android:fontFamily="@font/jersey10_regular"
+            android:text=" SHA-256"
+            android:textColor="@color/cinza_background"
+            android:textSize="32sp"
+            android:background="@color/background_cinza_claro"/>
+        <TextView
+            android:id="@+id/btn_selecionar_comparador"
+            android:layout_width="244dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="260dp"
+            android:fontFamily="@font/jersey10_regular"
+            android:text=" comparar arquivos entre dispositivos"
+            android:textColor="@color/cinza_background"
+            android:textSize="32sp"
+            android:background="@color/background_cinza_claro"/>
+    </FrameLayout>
+    <ImageButton
+        android:id="@+id/btn_menu"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="12dp"
+        android:background="@drawable/menu"
+        android:contentDescription="Menu"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:scaleType="centerCrop" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -157,6 +157,9 @@ public class BaseActivity extends AppCompatActivity {
                         finish();
                         break;
                     case 4:
+                        intent = new Intent(this, ComparadorFn.class);
+                        startActivity(intent);
+                        finish();
                         break;
                     default:
                         throw new RuntimeException("Erro inesperado, op_modo fora de controle");

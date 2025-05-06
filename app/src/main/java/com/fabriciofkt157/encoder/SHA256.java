@@ -7,6 +7,7 @@ import android.app.ActivityManager;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -20,6 +21,8 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
@@ -31,7 +34,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 
 public class SHA256 extends BaseActivity{
     ImageButton btnCenter, btnSelecionarArquivos, btnSelecionarModo, btn_ok, btn_copiar, btn_lixeira;
@@ -44,6 +46,7 @@ public class SHA256 extends BaseActivity{
     boolean arquivos = false, calculando = false;
     StringBuilder hashes;
     ActivityManager activityManager;
+    String origem;
     @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +74,10 @@ public class SHA256 extends BaseActivity{
                 new FrameLayout[]{ frame_hash, frame_aguarde },
                 null
         );
+        origem = getIntent().getStringExtra("origem");
+        if (origem == null) {
+            origem = "";
+        }
         btnSelecionarArquivos.setOnClickListener(v -> {
             botaoPressionado(btnSelecionarArquivos);
 
@@ -108,23 +115,44 @@ public class SHA256 extends BaseActivity{
             progressBar.setVisibility(View.VISIBLE);
             ExecutorService executor = Executors.newFixedThreadPool(1);
             executor.execute(() -> {
-                gerarSHA();
-                runOnUiThread(() -> {
-                    frame_aguarde.setVisibility(View.INVISIBLE);
-                    progressBar.setVisibility(View.GONE);
-                    tv_hash.setText(hashes.toString());
-                    btnCenter.setVisibility(View.INVISIBLE);
-                    btn_ok.setVisibility(View.VISIBLE);
-                    btnSelecionarArquivos.setEnabled(false);
-                    btnSelecionarArquivos.setAlpha(0.25f);
-                    btnSelecionarModo.setEnabled(false);
-                    btnSelecionarModo.setAlpha(0.25f);
-                    btn_lixeira.setEnabled(false);
-                    btn_lixeira.setAlpha(0.25f);
-                    frame_hash.setVisibility(View.VISIBLE);
-                    tv_nome_arquivo.setAlpha(0.25f);
-                    calculando = false;
-                });
+                if (origem.equals("Comparador")) {
+                    ZipUtils.copiarParaInterno(urisPastasSelecionadas, urisArquivosSelecionados, SHA256.this);
+                    File pastaTemp = new File(this.getFilesDir(), "temp");
+                    File arquivoZip = new File(this.getFilesDir(), "arquivos.zip");
+                    ZipUtils.zip(pastaTemp, arquivoZip);
+                    try (InputStream is = getContentResolver().openInputStream(Uri.fromFile(arquivoZip))) {
+                        String hash = calcularSHA256(Objects.requireNonNull(is));
+                        Intent intent = new Intent();
+                        intent.putExtra("hash", hash);
+                        if(!arquivoZip.delete()){
+                            Log.e("ERRO", "arquivo zip não pode ser deletado");
+                        }
+                        FileUtils.limparTemp(SHA256.this);
+                        setResult(RESULT_OK, intent);
+                        finish();
+                    } catch (IOException | NoSuchAlgorithmException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                else {
+                    gerarSHA();
+                    runOnUiThread(() -> {
+                        frame_aguarde.setVisibility(View.INVISIBLE);
+                        progressBar.setVisibility(View.GONE);
+                        tv_hash.setText(hashes.toString());
+                        btnCenter.setVisibility(View.INVISIBLE);
+                        btn_ok.setVisibility(View.VISIBLE);
+                        btnSelecionarArquivos.setEnabled(false);
+                        btnSelecionarArquivos.setAlpha(0.25f);
+                        btnSelecionarModo.setEnabled(false);
+                        btnSelecionarModo.setAlpha(0.25f);
+                        btn_lixeira.setEnabled(false);
+                        btn_lixeira.setAlpha(0.25f);
+                        frame_hash.setVisibility(View.VISIBLE);
+                        tv_nome_arquivo.setAlpha(0.25f);
+                        calculando = false;
+                    });
+                }
             });
 
         });
@@ -222,7 +250,6 @@ public class SHA256 extends BaseActivity{
     private final Runnable updateRunnable = new Runnable() {
         @Override
         public void run() {
-            System.out.println(arquivos);
             if (!arquivos || calculando) {
                 btn_lixeira.setAlpha(0.25f);
                 btn_lixeira.setEnabled(false);

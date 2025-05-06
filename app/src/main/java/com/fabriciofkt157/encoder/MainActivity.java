@@ -15,6 +15,15 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import androidx.core.content.ContextCompat;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
@@ -29,6 +38,40 @@ public class MainActivity extends AppCompatActivity {
         Objects.requireNonNull(getSupportActionBar()).hide();
         getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.cinza_background));
 
+        File reg_version = new File(getFilesDir(), "reg_version");
+        String versao = "0.15.1";
+        StringBuilder builder = new StringBuilder();
+        String linha;
+        if(reg_version.exists()){
+            try (FileInputStream fis = new FileInputStream(reg_version);
+                 InputStreamReader isr = new InputStreamReader(fis, StandardCharsets.UTF_8);
+                 BufferedReader reader = new BufferedReader(isr)) {
+
+
+                while ((linha = reader.readLine()) != null) {
+                    builder.append(linha).append("\n");
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            if(!builder.toString().equals(versao)){
+                try (FileOutputStream fos = new FileOutputStream(reg_version);
+                     OutputStreamWriter osw = new OutputStreamWriter(fos, StandardCharsets.UTF_8);
+                     BufferedWriter writer = new BufferedWriter(osw)) {
+                    writer.write("0.15.1");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        } else {
+            try (FileOutputStream fos = new FileOutputStream(reg_version);
+                 OutputStreamWriter osw = new OutputStreamWriter(fos, StandardCharsets.UTF_8);
+                 BufferedWriter writer = new BufferedWriter(osw)) {
+                writer.write("0.15.1");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
         btn_selecionar_criptografar = findViewById(R.id.btn_selecionar_criptografar);
         btn_selecionar_descriptografar = findViewById(R.id.btn_selecionar_descriptografar);
         btn_selecionar_base64 = findViewById(R.id.btn_selecionar_base64);
@@ -61,7 +104,9 @@ public class MainActivity extends AppCompatActivity {
         });
         btn_selecionar_comparador.setOnClickListener(v -> {
             botaoPressionado(btn_selecionar_comparador);
-            makeText(this, "Ainda trabalhando nisso...", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(this, ComparadorFn.class);
+            startActivity(intent);
+            finish();
         });
     }
 

@@ -154,6 +154,7 @@ public class Criptografar extends BaseActivity{
             urisPastasSelecionadas.clear();
             tv_nome_arquivo.setText("nenhum arquivo carregado");
             makeText(this, "Os arquivos selecionados foram removidos.", Toast.LENGTH_SHORT).show();
+            arquivos = false;
         });
 
         btnCenter.setOnClickListener(v -> {
@@ -216,6 +217,7 @@ public class Criptografar extends BaseActivity{
         });
     }
 
+    @SuppressLint("SetTextI18n")
     public void criptografia(){
 
         File pastaTemp = new File(this.getFilesDir(), "temp");
@@ -259,6 +261,8 @@ public class Criptografar extends BaseActivity{
                         if(!arquivoZip.delete()){
                             Log.e("ERRO", "arquivo zip não pode ser deletado");
                         }
+                        FileUtils.limparTemp(Criptografar.this);
+
                         progressBar.setVisibility(View.GONE);
                         frame_aguarde.setVisibility(View.INVISIBLE);
                         Log.i("etapa", "UI");
@@ -276,6 +280,11 @@ public class Criptografar extends BaseActivity{
                                     ativarBtns();
                                     criptografando = false;
                                     estado = 0;
+                                    urisArquivosSelecionados.clear();
+                                    urisPastasSelecionadas.clear();
+                                    tv_nome_arquivo.setText("nenhum arquivo carregado");
+                                    btnCenter.setEnabled(true);
+                                    btnCenter.setVisibility(View.VISIBLE);
                                 })
                                 .show();
                     });
@@ -361,14 +370,13 @@ public class Criptografar extends BaseActivity{
             else if (btn_menu_mode == 1 || estado == 1) btnCenter.setAlpha(0.25f);
             else if (btn_menu_mode == 0) btnCenter.setAlpha(1f);
 
-            if(!arquivos || criptografando) {
+            if((urisPastasSelecionadas.isEmpty() && urisArquivosSelecionados.isEmpty()) || criptografando) {
                 btn_lixeira.setEnabled(false);
                 btn_lixeira.setAlpha(0.25f);
             } else {
                 btn_lixeira.setAlpha(1f);
                 btn_lixeira.setEnabled(true);
             }
-
             handler.postDelayed(this, 16);
         }
     };

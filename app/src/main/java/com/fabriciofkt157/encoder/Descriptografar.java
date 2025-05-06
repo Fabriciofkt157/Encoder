@@ -217,7 +217,8 @@ public class Descriptografar extends BaseActivity {
         btn_lixeira.setEnabled(false);
     }
     public void descriptografia(){
-
+        btnCenter.setEnabled(false);
+        btnCenter.setVisibility(View.INVISIBLE);
         progressBar.setVisibility(View.VISIBLE);
         frame_aguarde.setVisibility(View.VISIBLE);
         desativarBtns();
@@ -259,6 +260,8 @@ public class Descriptografar extends BaseActivity {
                         frame_aguarde.setVisibility(View.INVISIBLE);
                         ativarBtns();
                         descriptografando = false;
+                        btnCenter.setEnabled(true);
+                        btnCenter.setVisibility(View.VISIBLE);
                         Toast.makeText(Descriptografar.this, "Arquivo descriptografado com sucesso!", Toast.LENGTH_SHORT).show();
                     });
                 } catch (Exception e) {

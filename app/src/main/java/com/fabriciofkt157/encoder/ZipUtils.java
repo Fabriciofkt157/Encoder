@@ -16,6 +16,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
@@ -135,24 +136,30 @@ public class ZipUtils {
     }
 
     public static void ziparPasta(ZipOutputStream zos, File pasta, String pastaParente){
+        File[] arquivos = Objects.requireNonNull(pasta.listFiles());
+        Arrays.sort(arquivos, (a, b) -> a.getName().compareToIgnoreCase(b.getName()));
 
-        for(File arquivo : Objects.requireNonNull(pasta.listFiles())){
+        for(File arquivo : arquivos){
             if(arquivo.isDirectory()){
                 ziparPasta(zos, arquivo, pastaParente + "/" + arquivo.getName());
             }
             else {
                 try(FileInputStream fis = new FileInputStream(arquivo)){
-                    ZipEntry zipEntry = new ZipEntry(pastaParente + "/" + arquivo.getName());
+                    String entradaNome = pastaParente + "/" + arquivo.getName();
+                    ZipEntry zipEntry = new ZipEntry(entradaNome);
+
+
+                    zipEntry.setTime(0);
+
                     zos.putNextEntry(zipEntry);
 
                     byte[] buffer = new byte[8192];
                     int bytesLidos;
-
                     while((bytesLidos = fis.read(buffer)) != -1){
                         zos.write(buffer, 0, bytesLidos);
                     }
-                    zos.closeEntry();
 
+                    zos.closeEntry();
                 } catch (IOException e){
                     Log.e("ERRO ao processar a pasta", String.valueOf(e));
                     throw new RuntimeException(e);
