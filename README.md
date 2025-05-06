@@ -11,7 +11,7 @@
 
 ## 📲 Instalação
 
-1. Baixe o APK do Encoder.
+1. Baixe o [APK](https://github.com/Fabriciofkt157/Encoder/releases/download/v0.15.1/Encoder.v0.15.1.apk) do Encoder.
 2. Instale no seu dispositivo Android.
 3. Abra o aplicativo e comece a utilizar as funcionalidades.
 
@@ -34,7 +34,7 @@ Caso tenha dúvidas ou sugestões, entre em contato:
 - Discord: fabriciofkt157
 
 
-### Versão atual do projeto: 0.14.1
+### Versão atual do projeto: 0.15.1
 
 ### Confira a aba de releases para mais informações
 https://github.com/Fabriciofkt157/Encoder/releases
