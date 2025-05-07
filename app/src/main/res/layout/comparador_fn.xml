@@ -54,18 +54,18 @@
 
     <TextView
         android:id="@+id/text_aguardando_outro"
-        android:layout_width="377dp"
-        android:layout_height="95dp"
+        android:layout_width="373dp"
+        android:layout_height="157dp"
         android:layout_marginTop="100dp"
         android:fontFamily="@font/jersey10_regular"
         android:text="AGUARDANDO A SELEÇÃO DE ARQUIVOS NO OUTRO DISPOSITIVO"
         android:textColor="@android:color/white"
         android:textSize="36sp"
         android:visibility="invisible"
-        app:layout_constraintTop_toTopOf="@id/tv_encoder"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/tv_encoder" />
     <ProgressBar
         android:id="@+id/progressBar"
         style="@android:style/Widget.DeviceDefault.Light.ProgressBar.Large"

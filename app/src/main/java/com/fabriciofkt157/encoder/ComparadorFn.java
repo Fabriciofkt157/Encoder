@@ -162,11 +162,6 @@ public class ComparadorFn extends BaseActivity{
                     }
                 }
         );
-
-        resultado.setOnClickListener(v -> {
-            ativarBtns();
-            resultado.setVisibility(View.INVISIBLE);
-        });
     }
     public boolean isWifiEnabled(Context context) {
         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
@@ -223,6 +218,7 @@ public class ComparadorFn extends BaseActivity{
                 while(hasheObtido == null) {
                     Thread.sleep(100);
                 }
+                writer.println("host selecionou arquivos");
 
                 runOnUiThread(() -> {
                     Log.i("info", "rodando UI");
@@ -262,6 +258,19 @@ public class ComparadorFn extends BaseActivity{
 
                 socket.close();
                 serverSocket.close();
+
+                runOnUiThread(() -> {
+                    resultado.setVisibility(View.VISIBLE);
+                });
+
+                Thread.sleep(5000);
+
+                runOnUiThread(() -> {
+                    Intent intent = new Intent(this, ComparadorFn.class);
+                    startActivity(intent);
+                    finish();
+                });
+
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (InterruptedException e) {
@@ -277,6 +286,7 @@ public class ComparadorFn extends BaseActivity{
             }
         }).start();
     }
+    @SuppressLint("SetTextI18n")
     public void receptor() {
         new Thread(() -> {
             Socket socket = null;
@@ -284,6 +294,21 @@ public class ComparadorFn extends BaseActivity{
                 socket = new Socket(IP, 5000);
                 PrintWriter writer = new PrintWriter(socket.getOutputStream(), true);
                 BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                runOnUiThread(() -> {
+                    text_selecione_fn.setVisibility(View.INVISIBLE);
+                    text_host_info.setVisibility(View.INVISIBLE);
+                    text_receptor_info.setVisibility(View.INVISIBLE);
+                    frame_conectar_receptor.setVisibility(View.INVISIBLE);
+                    btn_receptor.setVisibility(View.INVISIBLE);
+                    btn_host.setVisibility(View.INVISIBLE);
+                    text_aguardando_outro.setText("AGUARDANDO A SELEÇÃO DE ARQUIVOS NO HOST");
+                    text_aguardando_outro.setVisibility(View.VISIBLE);
+                    progressBar.setVisibility(View.VISIBLE);
+                });
+                String host_selecionado = reader.readLine();
+                while(!host_selecionado.equals("host selecionou arquivos")){
+                    Thread.sleep(100);
+                }
                 runOnUiThread(() -> {
                     Intent intent = new Intent(ComparadorFn.this, SHA256.class);
                     intent.putExtra("origem", "Comparador");
@@ -304,6 +329,7 @@ public class ComparadorFn extends BaseActivity{
                     btn_host.setVisibility(View.INVISIBLE);
                 });
                 writer.println(hasheObtido + "\n");
+
                 
                 String result = reader.readLine();
                 runOnUiThread(() -> {
@@ -317,6 +343,18 @@ public class ComparadorFn extends BaseActivity{
                     runOnUiThread(() -> resultado.setImageResource(R.drawable.reprovado));
                 }
                 socket.close();
+                runOnUiThread(() -> {
+                    resultado.setVisibility(View.VISIBLE);
+                });
+
+                Thread.sleep(5000);
+
+                runOnUiThread(() -> {
+                    Intent intent = new Intent(this, ComparadorFn.class);
+                    startActivity(intent);
+                    finish();
+                });
+
 
             } catch (UnknownHostException e) {
                 Log.e("SocketError", "Host desconhecido: " + e.getMessage());
@@ -355,18 +393,6 @@ public class ComparadorFn extends BaseActivity{
         btn_receptor.setEnabled(false);
         btn_host.setEnabled(false);
         text_selecione_fn.setEnabled(false);
-    }
-    public void ativarBtns(){
-        text_selecione_fn.setAlpha(1f);
-        text_receptor_info.setAlpha(1f);
-        text_host_info.setAlpha(1f);
-        btn_receptor.setAlpha(1f);
-        btn_host.setAlpha(1f);
-        text_receptor_info.setEnabled(true);
-        text_host_info.setEnabled(true);
-        btn_receptor.setEnabled(true);
-        btn_host.setEnabled(true);
-        text_selecione_fn.setEnabled(true);
     }
 
 }
